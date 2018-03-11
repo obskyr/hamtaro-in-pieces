@@ -1,0 +1,1 @@
+MAGIC_IS_GBC EQU $11

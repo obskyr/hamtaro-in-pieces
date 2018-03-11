@@ -1,0 +1,10 @@
+# ROMs and related files.
+*.gbc
+*.sym
+*.sav
+
+# Intermediary build files
+build/
+
+# And of course, the obligatory macOS junk prevention.
+.DS_Store
