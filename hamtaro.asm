@@ -90,7 +90,7 @@ EntryPoint::
 
 SECTION "Start", ROM0[$0254]
 Start::
-    cp a, MAGIC_IS_GBC
+    cp a, M_MagicIsGbc
     ld sp, $FFFD
     jp nz, DisplayGbcOnlyScreen
 
@@ -118,4 +118,120 @@ DisplayGbcOnlyScreen::
     xor a
     ld b, $7E
     ld c, $FD
-    ; ... (@0x04E6)
+.clearHramLoop
+    ld [$FF00+c], a
+    dec c
+    dec b
+    jr nz, .clearHramLoop
+
+.waitForVBlankLoop
+    ldh a, [A_Lcdc_YCoordinate]
+    cp a, 144
+    jr nc, .waitForVBlankLoop
+
+    ; Turn off the LCD
+    ld a, 0
+    ldh [A_Lcdc_Control], a
+    
+    ; Clear WRAM from $C000 all the way to $E000, 256 bytes at a time
+    ld c, $E0
+    ld hl, $C000
+    xor a
+.clearWramLoop
+    ldi [hl], a
+    cp l
+    jr nz, .clearWramLoop
+
+    ld a, h
+    cp c
+    ld a, l
+    jr nz, .clearWramLoop
+
+    ; Very odd to set a bunch of already cleared memory addresses to 0 here...
+    ld a, 0
+    ld [$C672], a
+    ld a, 0
+    ld [$C673], a
+    ldh [A_Lcdc_YScroll], a
+    ld [$C674], a
+    ldh [A_Lcdc_XScroll], a
+    ld [$C675], a
+    ldh [A_Lcdc_WindowYPos], a
+    
+    ; Shift the window completely off the screen, I suppose.
+    ld a, 167
+    ld [$C676], a
+    ldh [A_Lcdc_WindowXPos], a
+
+    ld a, 0
+    ld [$C356], a
+    ld a, $40
+    ld [$C357], a
+    ld a, $5E
+    ld [$C358], a
+    ld a, $00
+    ld [$C35A], a
+    ld a, $8D
+    ld [$C35B], a
+
+    call $251A
+
+    ;...
+
+SECTION "No idea what this is yet", ROM0[$251A]
+SomethingIGuess::
+    ld a, [$C356]
+    ld l, a
+    ld a, [$C357]
+    ld h, a
+    ld a, [$C358]
+    ld [$C677], a
+    ld [$2000], a
+
+    ld a, [$C35A]
+    ld c, a
+    ld a, [$C35B]
+    ld b, a
+    push bc
+
+.someSortaLoop
+    ldi a, [hl]
+    ld e, a
+    and a
+    jr z, .outtaTheLoop
+    cp a, $80
+    jr c, .option1
+    and a, $7C
+    cp a, $7C
+    jr z, .option3
+    jr .option2
+
+.option1
+    call $2572
+    jr .someSortaLoop
+.option2
+    call $257A
+    jr .someSortaLoop
+.option3
+    call $25C4
+    jr .someSortaLoop
+
+.outtaTheLoop
+    ld a, [$C35A]
+    ld [$C356], a
+    ld a, [$C35B]
+    ld [$C357], a
+
+    ld a, [$C35C]
+    ld [$C358], a
+
+    pop hl
+    ld a, c
+    sub l
+    ld [$C35A], a
+    ld a, b
+    sbc h
+    ld [$C35B], a
+    
+    ret
+
