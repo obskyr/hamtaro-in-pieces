@@ -12,19 +12,20 @@ A_Lcdc_WindowYPos  EQU $FF4A
 A_Lcdc_WindowXPos  EQU $FF4B
 
 RSSET $C356
-A_GfxLoadInfo_SrcAddress    RW 1
-A_GfxLoadInfo_SrcBank       RW 1
-A_GfxLoadInfo_DestAddress   RW 1
-A_GfxLoadInfo_DestBank      RW 1
+A_Decompression_SrcAddress    RW 1
+A_Decompression_SrcBank       RW 1
+A_Decompression_DestAddress   RW 1
+A_Decompression_DestBank      RW 1
 
 ; The structure for passing arguments to the graphics loader
 ; is reused to pass information out again.
 RSSET $C356
-A_LoadedGfx_Address  RW 1
-A_LoadedGfx_Bank     RW 1
-A_LoadedGfx_Length   RW 1
+A_DecompressedData_Address  RW 1
+A_DecompressedData_Bank     RW 1
+A_DecompressedData_Length   RW 1
 
 RSSET $C360
-A_RleChunk_DataLength   RW 1
-A_RleChunk_RepeatsLeft  RW 1
-A_RleChunk_DataAddress  RW 1
+A_RleChunk_DataLength      RW 1
+A_RleChunk_RepeatsLeft     RW 1
+A_ReferenceChunk_BytesLeft EQU A_RleChunk_RepeatsLeft
+A_RleChunk_DataAddress     RW 1

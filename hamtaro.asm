@@ -164,33 +164,42 @@ DisplayGbcOnlyScreen::
     ldh [A_Lcdc_WindowXPos], a
 
     ld a, 0
-    ld [A_GfxLoadInfo_SrcAddress], a
+    ld [A_Decompression_SrcAddress], a
     ld a, $40
-    ld [A_GfxLoadInfo_SrcAddress + 1], a
+    ld [A_Decompression_SrcAddress + 1], a
     ld a, $5E
-    ld [A_GfxLoadInfo_SrcBank], a
+    ld [A_Decompression_SrcBank], a
     ld a, $00
-    ld [A_GfxLoadInfo_DestAddress], a
+    ld [A_Decompression_DestAddress], a
     ld a, $8D
-    ld [A_GfxLoadInfo_DestAddress + 1], a
+    ld [A_Decompression_DestAddress + 1], a
 
-    call LoadJazzedUpRleData
+    call Decompress
 
     ;...
 
 SECTION "Decompression routine", ROM0[$251A]
-LoadJazzedUpRleData::
-    ld a, [A_GfxLoadInfo_SrcAddress]
+; Decompression in Hamtaro: HHU! is  a mish-mash of a few different approaches.
+;
+; The data is organized in chunks, which can be any one of 3 different types:
+; * Up to 127 raw bytes,
+; * Run length encoded bytes
+; * A reference to earlier data
+;
+; That last one isn't LZ77 or anything with a sliding window - it
+; uses a length-index pair relative to the start of the data.
+Decompress::
+    ld a, [A_Decompression_SrcAddress]
     ld l, a
-    ld a, [A_GfxLoadInfo_SrcAddress + 1]
+    ld a, [A_Decompression_SrcAddress + 1]
     ld h, a
-    ld a, [A_GfxLoadInfo_SrcBank]
+    ld a, [A_Decompression_SrcBank]
     ld [$C677], a
     ld [A_BankNumberControl], a
 
-    ld a, [A_GfxLoadInfo_DestAddress]
+    ld a, [A_Decompression_DestAddress]
     ld c, a
-    ld a, [A_GfxLoadInfo_DestAddress + 1]
+    ld a, [A_Decompression_DestAddress + 1]
     ld b, a
     push bc
 
@@ -200,12 +209,12 @@ LoadJazzedUpRleData::
     and a
     jr z, .finished
 
-    cp a, -128
+    cp a, 128
     jr c, .isPositive
 
     and a, $7C
     cp a, $7C
-    jr z, .isBetweenNegative124AndNegative127
+    jr z, .isBetweenFCAndFE
 
     jr .else
 
@@ -215,25 +224,25 @@ LoadJazzedUpRleData::
 .else
     call ChunkHandler_Rle
     jr .iterateThroughChunks
-.isBetweenNegative124AndNegative127
-    call ChunkHandler_3
+.isBetweenFCAndFE
+    call ChunkHandler_Reference
     jr .iterateThroughChunks
 
 .finished
-    ld a, [A_GfxLoadInfo_DestAddress]
-    ld [A_LoadedGfx_Address], a
-    ld a, [A_GfxLoadInfo_DestAddress + 1]
-    ld [A_LoadedGfx_Address + 1], a
-    ld a, [A_GfxLoadInfo_DestBank]
-    ld [A_LoadedGfx_Bank], a
+    ld a, [A_Decompression_DestAddress]
+    ld [A_DecompressedData_Address], a
+    ld a, [A_Decompression_DestAddress + 1]
+    ld [A_DecompressedData_Address + 1], a
+    ld a, [A_Decompression_DestBank]
+    ld [A_DecompressedData_Bank], a
 
     pop hl
     ld a, c
     sub l
-    ld [A_LoadedGfx_Length], a
+    ld [A_DecompressedData_Length], a
     ld a, b
     sbc h
-    ld [A_LoadedGfx_Length + 1], a
+    ld [A_DecompressedData_Length + 1], a
     
     ret
 
@@ -300,39 +309,43 @@ ChunkHandler_Rle:
 
     ret
 
-ChunkHandler_3:
+ChunkHandler_Reference:
     ld a, e
     and a, $03
-    ld [$C363], a
-
-.loopTime
+    ld [A_ReferenceChunk_BytesLeft + 1], a
     ldi a, [hl]
-    ld [$C362], a
+    ld [A_ReferenceChunk_BytesLeft], a
+
     ldi a, [hl]
     ld e, a
     ldi a, [hl]
     ld d, a
     push hl
-    ld a, [A_GfxLoadInfo_DestAddress]
+
+    ld a, [A_Decompression_DestAddress]
     ld l, a
-    ld a, [A_GfxLoadInfo_DestAddress + 1]
+    ld a, [A_Decompression_DestAddress + 1]
     ld h, a
     add hl, de
-    ld a, [$C363]
+
+    ld a, [A_ReferenceChunk_BytesLeft + 1]
     ld d, a
-    ld a, [$C362]
+    ld a, [A_ReferenceChunk_BytesLeft]
     ld e, a
     and a
-    jr z, .itIsLooop
+    jr z, .copyLoop
+
+    ; References to 0x0000, 0x0100, 0x0200, and 0x0300 have 0x0100 added.
     inc d
-.itIsLooop
+
+.copyLoop
     ldi a, [hl]
     ld [bc], a
     inc bc
     dec e
-    jr nz, .itIsLooop
+    jr nz, .copyLoop
     dec d
-    jr nz, .itIsLooop
+    jr nz, .copyLoop
 
     pop hl
     ret
