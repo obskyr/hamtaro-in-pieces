@@ -174,12 +174,12 @@ DisplayGbcOnlyScreen::
     ld a, $8D
     ld [A_GfxLoadInfo_DestAddress + 1], a
 
-    call LoadCompressedGraphics
+    call LoadJazzedUpRleData
 
     ;...
 
-SECTION "Graphics decompression routine", ROM0[$251A]
-LoadCompressedGraphics::
+SECTION "Decompression routine", ROM0[$251A]
+LoadJazzedUpRleData::
     ld a, [A_GfxLoadInfo_SrcAddress]
     ld l, a
     ld a, [A_GfxLoadInfo_SrcAddress + 1]
@@ -213,7 +213,7 @@ LoadCompressedGraphics::
     call ChunkHandler_CopyRawBytes
     jr .iterateThroughChunks
 .else
-    call ChunkHandler_2
+    call ChunkHandler_Rle
     jr .iterateThroughChunks
 .isBetweenNegative124AndNegative127
     call ChunkHandler_3
@@ -247,51 +247,57 @@ ChunkHandler_CopyRawBytes:
     jr nz, .copyLoop
     ret
 
-ChunkHandler_2:
+ChunkHandler_Rle:
     ld d, a
+    
     ld a, e
-    and a, $03
-    ld [$C363], a
+    and a, %00000011
+    ld [A_RleChunk_RepeatsLeft + 1], a
     ldi a, [hl]
-    ld [$C362], a
+    ld [A_RleChunk_RepeatsLeft], a
+
     ld a, d
     srl a
     and a
-    jr nz, .skipSomething
+    jr nz, .storeRleParameters
+    
     ld a, 1
-.skipSomething
-    ld [$C360], a
-    ld a, l
-    ld [$C364], a
-    ld a, h
-    ld [$C365], a
 
-.wowALoop
-    ld a, [$C364]
+.storeRleParameters
+    ld [A_RleChunk_DataLength], a
+    ld a, l
+    ld [A_RleChunk_DataAddress], a
+    ld a, h
+    ld [A_RleChunk_DataAddress + 1], a
+
+.rleRepeatLoop
+    ld a, [A_RleChunk_DataAddress]
     ld l, a
-    ld a, [$C365]
+    ld a, [A_RleChunk_DataAddress + 1]
     ld h, a
-    ld a, [$C360]
+    ld a, [A_RleChunk_DataLength]
     ld e, a
 
-.itIsAInnerLoop
+.copyLoop
     ldi a, [hl]
     ld [bc], a
     inc bc
     dec e
-    jr nz, .itIsAInnerLoop
-    ld a, [$C362]
-    sub a, 1
-    ld [$C362], a
-    ld a, [$C363]
-    sbc a, 0
-    ld [$C363], a
-    and a
-    jr nz, .wowALoop
+    jr nz, .copyLoop
 
-    ld a, [$C362]
+    ld a, [A_RleChunk_RepeatsLeft]
+    sub a, 1
+    ld [A_RleChunk_RepeatsLeft], a
+    ld a, [A_RleChunk_RepeatsLeft + 1]
+    sbc a, 0
+    ld [A_RleChunk_RepeatsLeft + 1], a
+    
     and a
-    jr nz, .wowALoop
+    jr nz, .rleRepeatLoop
+    ld a, [A_RleChunk_RepeatsLeft]
+    and a
+    jr nz, .rleRepeatLoop
+
     ret
 
 ChunkHandler_3:

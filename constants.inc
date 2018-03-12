@@ -23,3 +23,8 @@ RSSET $C356
 A_LoadedGfx_Address  RW 1
 A_LoadedGfx_Bank     RW 1
 A_LoadedGfx_Length   RW 1
+
+RSSET $C360
+A_RleChunk_DataLength   RW 1
+A_RleChunk_RepeatsLeft  RW 1
+A_RleChunk_DataAddress  RW 1
