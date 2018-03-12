@@ -2,6 +2,8 @@
 M_MagicIsGbc EQU $11
 
 ; A stands for "address".
+A_BankNumberControl EQU $2000
+
 A_Lcdc_Control     EQU $FF40
 A_Lcdc_YScroll     EQU $FF42
 A_Lcdc_XScroll     EQU $FF43
@@ -9,3 +11,15 @@ A_Lcdc_YCoordinate EQU $FF44
 A_Lcdc_WindowYPos  EQU $FF4A
 A_Lcdc_WindowXPos  EQU $FF4B
 
+RSSET $C356
+A_GfxLoadInfo_SrcAddress    RW 1
+A_GfxLoadInfo_SrcBank       RW 1
+A_GfxLoadInfo_DestAddress   RW 1
+A_GfxLoadInfo_DestBank      RW 1
+
+; The structure for passing arguments to the graphics loader
+; is reused to pass information out again.
+RSSET $C356
+A_LoadedGfx_Address  RW 1
+A_LoadedGfx_Bank     RW 1
+A_LoadedGfx_Length   RW 1

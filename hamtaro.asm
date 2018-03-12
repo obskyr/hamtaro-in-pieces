@@ -164,74 +164,169 @@ DisplayGbcOnlyScreen::
     ldh [A_Lcdc_WindowXPos], a
 
     ld a, 0
-    ld [$C356], a
+    ld [A_GfxLoadInfo_SrcAddress], a
     ld a, $40
-    ld [$C357], a
+    ld [A_GfxLoadInfo_SrcAddress + 1], a
     ld a, $5E
-    ld [$C358], a
+    ld [A_GfxLoadInfo_SrcBank], a
     ld a, $00
-    ld [$C35A], a
+    ld [A_GfxLoadInfo_DestAddress], a
     ld a, $8D
-    ld [$C35B], a
+    ld [A_GfxLoadInfo_DestAddress + 1], a
 
-    call $251A
+    call LoadCompressedGraphics
 
     ;...
 
-SECTION "No idea what this is yet", ROM0[$251A]
-SomethingIGuess::
-    ld a, [$C356]
+SECTION "Graphics decompression routine", ROM0[$251A]
+LoadCompressedGraphics::
+    ld a, [A_GfxLoadInfo_SrcAddress]
     ld l, a
-    ld a, [$C357]
+    ld a, [A_GfxLoadInfo_SrcAddress + 1]
     ld h, a
-    ld a, [$C358]
+    ld a, [A_GfxLoadInfo_SrcBank]
     ld [$C677], a
-    ld [$2000], a
+    ld [A_BankNumberControl], a
 
-    ld a, [$C35A]
+    ld a, [A_GfxLoadInfo_DestAddress]
     ld c, a
-    ld a, [$C35B]
+    ld a, [A_GfxLoadInfo_DestAddress + 1]
     ld b, a
     push bc
 
-.someSortaLoop
+.iterateThroughChunks
     ldi a, [hl]
     ld e, a
     and a
-    jr z, .outtaTheLoop
-    cp a, $80
-    jr c, .option1
+    jr z, .finished
+
+    cp a, -128
+    jr c, .isPositive
+
     and a, $7C
     cp a, $7C
-    jr z, .option3
-    jr .option2
+    jr z, .isBetweenNegative124AndNegative127
 
-.option1
-    call $2572
-    jr .someSortaLoop
-.option2
-    call $257A
-    jr .someSortaLoop
-.option3
-    call $25C4
-    jr .someSortaLoop
+    jr .else
 
-.outtaTheLoop
-    ld a, [$C35A]
-    ld [$C356], a
-    ld a, [$C35B]
-    ld [$C357], a
+.isPositive
+    call ChunkHandler_CopyRawBytes
+    jr .iterateThroughChunks
+.else
+    call ChunkHandler_2
+    jr .iterateThroughChunks
+.isBetweenNegative124AndNegative127
+    call ChunkHandler_3
+    jr .iterateThroughChunks
 
-    ld a, [$C35C]
-    ld [$C358], a
+.finished
+    ld a, [A_GfxLoadInfo_DestAddress]
+    ld [A_LoadedGfx_Address], a
+    ld a, [A_GfxLoadInfo_DestAddress + 1]
+    ld [A_LoadedGfx_Address + 1], a
+    ld a, [A_GfxLoadInfo_DestBank]
+    ld [A_LoadedGfx_Bank], a
 
     pop hl
     ld a, c
     sub l
-    ld [$C35A], a
+    ld [A_LoadedGfx_Length], a
     ld a, b
     sbc h
-    ld [$C35B], a
+    ld [A_LoadedGfx_Length + 1], a
     
     ret
 
+ChunkHandler_CopyRawBytes:
+    ld d, a
+.copyLoop
+    ldi a, [hl]
+    ld [bc], a
+    inc bc
+    dec d
+    jr nz, .copyLoop
+    ret
+
+ChunkHandler_2:
+    ld d, a
+    ld a, e
+    and a, $03
+    ld [$C363], a
+    ldi a, [hl]
+    ld [$C362], a
+    ld a, d
+    srl a
+    and a
+    jr nz, .skipSomething
+    ld a, 1
+.skipSomething
+    ld [$C360], a
+    ld a, l
+    ld [$C364], a
+    ld a, h
+    ld [$C365], a
+
+.wowALoop
+    ld a, [$C364]
+    ld l, a
+    ld a, [$C365]
+    ld h, a
+    ld a, [$C360]
+    ld e, a
+
+.itIsAInnerLoop
+    ldi a, [hl]
+    ld [bc], a
+    inc bc
+    dec e
+    jr nz, .itIsAInnerLoop
+    ld a, [$C362]
+    sub a, 1
+    ld [$C362], a
+    ld a, [$C363]
+    sbc a, 0
+    ld [$C363], a
+    and a
+    jr nz, .wowALoop
+
+    ld a, [$C362]
+    and a
+    jr nz, .wowALoop
+    ret
+
+ChunkHandler_3:
+    ld a, e
+    and a, $03
+    ld [$C363], a
+
+.loopTime
+    ldi a, [hl]
+    ld [$C362], a
+    ldi a, [hl]
+    ld e, a
+    ldi a, [hl]
+    ld d, a
+    push hl
+    ld a, [A_GfxLoadInfo_DestAddress]
+    ld l, a
+    ld a, [A_GfxLoadInfo_DestAddress + 1]
+    ld h, a
+    add hl, de
+    ld a, [$C363]
+    ld d, a
+    ld a, [$C362]
+    ld e, a
+    and a
+    jr z, .itIsLooop
+    inc d
+.itIsLooop
+    ldi a, [hl]
+    ld [bc], a
+    inc bc
+    dec e
+    jr nz, .itIsLooop
+    dec d
+    jr nz, .itIsLooop
+
+    pop hl
+    ret
