@@ -3,8 +3,11 @@
 *.sym
 *.sav
 
-# Intermediary build files
+# Built files.
 build/
+tools/*
+!tools/Makefile
+!tools/source/
 
 # And of course, the obligatory macOS junk prevention.
 .DS_Store
