@@ -1,42 +1,47 @@
 # Decompress data encoded with the method used in Hamtaro: Ham-Hams Unite!
 
 def decompress_section(file)
-    data = [] of UInt8
+    io = IO::Memory.new
 
     chunk_start = file.read_byte.not_nil!
     until chunk_start == 0
         if chunk_start <= 127
-            cur_bytes = Bytes.new(chunk_start)
-            file.read(cur_bytes)
-            data += cur_bytes.to_a
+            IO.copy(file, io, chunk_start)
         elsif 0xFC <= chunk_start <= 0xFE
-            data += decompress_reference_chunk(file, chunk_start, data)
+            decompress_reference_chunk(file, io, chunk_start)
         else
-            data += decompress_rle_chunk(file, chunk_start)
+            decompress_rle_chunk(file, io, chunk_start)
         end
         chunk_start = file.read_byte.not_nil!
     end
 
-    return data
+    return io.to_slice
 end
 
-def decompress_rle_chunk(file, chunk_start)
+def decompress_rle_chunk(from, to, chunk_start)
     num_bytes = (chunk_start & 0b01111100) >> 1
     num_bytes = 1 if num_bytes == 0
-    run_length = ((chunk_start & 0b11) << 8) | file.read_byte.not_nil!
+    run_length = ((chunk_start & 0b11) << 8) | from.read_byte.not_nil!
 
     bytes_to_repeat = Bytes.new(num_bytes)
-    file.read(bytes_to_repeat)
-
-    return bytes_to_repeat.to_a * run_length
+    from.read_fully bytes_to_repeat
+    run_length.times do
+        to.write bytes_to_repeat
+    end
 end
 
-def decompress_reference_chunk(file, chunk_start, data)
-    num_bytes = ((chunk_start & 0b11) << 8) | file.read_byte.not_nil!
+def decompress_reference_chunk(from, to, chunk_start)
+    start = to.tell
+    num_bytes = ((chunk_start & 0b11) << 8) | from.read_byte.not_nil!
     num_bytes += 0x100 if num_bytes & 0xFF == 0
-    start_index = file.read_bytes(UInt16, IO::ByteFormat::LittleEndian)
+    start_index = from.read_bytes(UInt16, IO::ByteFormat::LittleEndian)
+    
+    # This won't work if the reference references bytes it itself writes,
+    # but I'm fairly certain the encoder Pax Softnica used wouldn't do that.
+    reference_io = IO::Memory.new(to.to_slice)
+    reference_io.seek start_index
 
-    return data[start_index, num_bytes]
+    IO.copy(reference_io, to, num_bytes)
 end
 
 begin
@@ -55,7 +60,7 @@ file.close
 
 if out_path
     puts "Decompressing section at $%06X in #{in_path} to #{out_path}..." % address
-    File.write out_path, Bytes.new(data.to_unsafe, data.size * sizeof(UInt8))
+    File.write out_path, data
 else
-    STDOUT.write Bytes.new(data.to_unsafe, data.size * sizeof(UInt8))
+    STDOUT.write data
 end
