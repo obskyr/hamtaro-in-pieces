@@ -9,7 +9,7 @@ OBJECTS = $(OBJECTS_WITHOUT_BUILD_DIRECTORY:%.o=build/%.o)
 
 # This approach is adapted from the one the Telefang disassembly project uses!
 $(foreach obj, $(OBJECTS), \
-	$(eval $(obj:build/%.o=%)_autodependencies := $(shell python tools/asmdependencies.py $(obj:build/%.o=%.asm))) \
+	$(eval $(obj:build/%.o=%)_autodependencies := $(shell tools/asmdependencies $(obj:build/%.o=%.asm))) \
 )
 
 all: $(OUTPUT_ROMS) compare
