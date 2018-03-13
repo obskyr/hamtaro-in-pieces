@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+"""Decompress data encoded with the method used in Hamtaro: Ham-Hams Unite!"""
+
 from __future__ import print_function
 from __future__ import unicode_literals
 
