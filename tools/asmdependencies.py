@@ -9,7 +9,7 @@ import os
 import sys
 
 def dependencies_of(asm_file_path):
-    dependencies = []
+    dependencies = set()
     with open(asm_file_path) as f:
         for line in f:
             dependencies += dependencies_from_line(line)
@@ -18,11 +18,11 @@ def dependencies_of(asm_file_path):
 def dependencies_from_line(line):
     line = line.lstrip().split(';', 1)[0]
     if not line.startswith('INC'):
-        return []
+        return set()
     
-    dependencies = []
+    dependencies = set()
     path = line[line.index('"') + 1:line.rindex('"')]
-    dependencies.append(path)
+    dependencies.add(path)
     if line.startswith('INCLUDE'):
         dependencies += dependencies_of(path)
     
