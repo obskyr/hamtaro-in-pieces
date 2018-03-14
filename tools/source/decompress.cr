@@ -31,9 +31,10 @@ def decompress_rle_chunk(from, to, chunk_start)
 end
 
 def decompress_reference_chunk(from, to, chunk_start)
-    start = to.tell
     num_bytes = ((chunk_start & 0b11) << 8) | from.read_byte.not_nil!
-    num_bytes += 0x100 if num_bytes & 0xFF == 0
+    # The in-game decoder uses code akin to a do-while loop,
+    # so a length of 0x0000 underflows back to 0x100.
+    num_bytes = 0x100 if num_bytes == 0 
     start_index = from.read_bytes(UInt16, IO::ByteFormat::LittleEndian)
     
     # This won't work if the reference references bytes it itself writes,
