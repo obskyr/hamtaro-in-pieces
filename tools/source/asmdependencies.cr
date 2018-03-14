@@ -1,19 +1,16 @@
 # Get all the dependencies of RGBDS assembly files recursively,
-# and output them using Makefile dependency syntax.
+# and output them using Make dependency syntax.
 
 def dependencies_in(asm_file_paths)
     asm_file_paths = asm_file_paths.clone
     dependencies = {} of String => Set(String)
 
-    i = 0
-    while i < asm_file_paths.size
-        asm_file_path = asm_file_paths[i]
+    asm_file_paths.each do |asm_file_path|
         if !dependencies.has_key? asm_file_path
             asm_dependencies, bin_dependencies = shallow_dependencies_of asm_file_path
             dependencies[asm_file_path] = asm_dependencies | bin_dependencies
-            asm_file_paths += asm_dependencies.to_a
+            asm_file_paths.concat asm_dependencies.to_a
         end
-        i += 1
     end
 
     return dependencies
@@ -28,6 +25,7 @@ def shallow_dependencies_of(asm_file_path)
         next if !keyword_match
 
         keyword = keyword_match[1].upcase
+        line = line.split(';', 1)[0]
         path = line[line.index('"').not_nil! + 1...line.rindex('"').not_nil!]
         if keyword == "INCLUDE"
             asm_dependencies << path
@@ -45,8 +43,8 @@ if ARGV.size == 0
 end
 
 dependencies_in(ARGV).each do |file, dependencies|
-    # It seems that if A depends on B which depends on C, and C is modified,
-    # Make needs you to change the modification time of B too. No idea why.
-    # That's the reason for the "@touch $@", in any case. It works!
-    puts "#{file}: #{dependencies.join(' ')}\n\t@touch $@"
+    # It seems that if A depends on B which depends on C, and
+    # C is modified, Make needs you to change the modification
+    # time of B too. That's the reason for the "@touch $@".
+    puts "#{file}: #{dependencies.join(' ')}\n\t@touch $@" if !dependencies.empty?
 end
