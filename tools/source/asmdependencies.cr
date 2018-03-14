@@ -45,5 +45,8 @@ if ARGV.size == 0
 end
 
 dependencies_in(ARGV).each do |file, dependencies|
-    puts "#{file}: #{dependencies.join(' ')}" if !dependencies.empty?
+    # It seems that if A depends on B which depends on C, and C is modified,
+    # Make needs you to change the modification time of B too. No idea why.
+    # That's the reason for the "@touch $@", in any case. It works!
+    puts "#{file}: #{dependencies.join(' ')}\n\t@touch $@"
 end
