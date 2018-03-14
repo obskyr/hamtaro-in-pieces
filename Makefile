@@ -1,17 +1,10 @@
 .PHONY: all clean
-.SECONDEXPANSION: # Required for expanding static patterns into variable names.
 
 BASE_ROM = base.gbc
 
 OUTPUT_ROMS = Hamtaro\ -\ Ham-Hams\ Unite!\ (U).gbc
 OBJECTS_WITHOUT_BUILD_DIRECTORY = hamtaro.o wram.o
 OBJECTS = $(OBJECTS_WITHOUT_BUILD_DIRECTORY:%.o=build/%.o)
-
-# This approach is adapted from the one the Telefang disassembly project uses!
-$(if $(wildcard tools/asmdependencies),,$(error asmdependencies not found. Please run `(cd tools && make)`))
-$(foreach obj, $(OBJECTS), \
-	$(eval $(obj:build/%.o=%)_autodependencies := $(shell tools/asmdependencies $(obj:build/%.o=%.asm))) \
-)
 
 all: $(OUTPUT_ROMS) compare
 
@@ -26,5 +19,8 @@ compare: $(OUTPUT_ROMS)
 	cmp "$(BASE_ROM)" "$<"
 
 # rgbasm -h doesn't put in automatic nops after halts.
-$(OBJECTS): build/%.o: %.asm $$($$*_autodependencies)
+$(OBJECTS): build/%.o: %.asm
 	rgbasm -h -E -o $@ $<
+
+$(shell tools/asmdependencies $(OBJECTS:build/%.o=%.asm) > build/dependencies.d)
+include build/dependencies.d
