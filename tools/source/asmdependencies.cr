@@ -12,11 +12,11 @@ def dependencies_from_line(line)
     dependencies = Set(String).new
     line = line.lstrip
     line = line.split(";", 1)[0]
-    return dependencies if !line.starts_with? "INC"
+    return dependencies if !line.match /^INC[LB]/i
 
     path = line[line.index('"').not_nil! + 1...line.rindex('"').not_nil!]
     dependencies << path
-    if line.starts_with? "INCLUDE"
+    if line.match /^INCLUDE/i
         dependencies |= dependencies_of path
     end
 
