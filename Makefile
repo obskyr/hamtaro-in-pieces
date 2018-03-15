@@ -19,8 +19,8 @@ compare: $(OUTPUT_ROMS)
 	cmp "$(BASE_ROM)" "$<"
 
 # rgbasm -h doesn't put in automatic nops after halts.
-$(OBJECTS): build/%.o: %.asm
-	rgbasm -h -E -o $@ $<
+$(OBJECTS): build/%.o: source/%.asm
+	rgbasm -i source/ -h -E -o $@ $<
 
-$(shell tools/asmdependencies $(OBJECTS:build/%.o=%.asm) > build/dependencies.d)
+$(shell cd source && ../tools/asmdependencies $(OBJECTS:build/%.o=%.asm) > ../build/dependencies.d)
 include build/dependencies.d
