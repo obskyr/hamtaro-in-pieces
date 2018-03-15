@@ -1,3 +1,6 @@
+IF !DEF(CONSTANTS_INC)
+CONSTANTS_INC SET 1
+
 ; M stands for "macro".
 M_MagicIsGbc EQU $11
 
@@ -11,3 +14,5 @@ A_Lcdc_XScroll     EQU $FF43
 A_Lcdc_YCoordinate EQU $FF44
 A_Lcdc_WindowYPos  EQU $FF4A
 A_Lcdc_WindowXPos  EQU $FF4B
+
+ENDC

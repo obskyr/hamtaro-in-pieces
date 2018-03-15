@@ -164,46 +164,12 @@ DisplayGbcOnlyScreen::
     ld [$C676], a
     ldh [A_Lcdc_WindowXPos], a
 
-    ld a, $00
-    ld [A_Decompression_SrcAddress], a
-    ld a, $40
-    ld [A_Decompression_SrcAddress + 1], a
-    ld a, $5E
-    ld [A_Decompression_SrcBank], a
-    ld a, $00
-    ld [A_Decompression_DestAddress], a
-    ld a, $8D
-    ld [A_Decompression_DestAddress + 1], a
-    call Decompress
-
-    ld a, $DE
-    ld [A_Decompression_SrcAddress], a
-    ld a, $41
-    ld [A_Decompression_SrcAddress + 1], a
-    ld a, $5E
-    ld [A_Decompression_SrcBank], a
-    ld a, $00
-    ld [A_Decompression_DestAddress], a
-    ld a, $90
-    ld [A_Decompression_DestAddress + 1], a
-    call Decompress
-
-    ld a, $08
-    ld [A_Decompression_SrcAddress], a
-    ld a, $48
-    ld [A_Decompression_SrcAddress + 1], a
-    ld a, $5E
-    ld [A_Decompression_SrcBank], a
-    ld a, $14
-    ld [A_TilemapDecompression_Width], a
-    ld a, $00
-    ld [A_Decompression_DestAddress], a
-    ld a, $98
-    ld [A_Decompression_DestAddress + 1], a
-    call DecompressTilemap
+    M_Decompress $5E, $4000, $8D00
+    M_Decompress $5E, $41DE, $9000
+    M_DecompressTilemap $14, $5E, $4808, $9800
 
 SECTION "Decompression routine", ROM0[$251A]
-; Decompression in Hamtaro: HHU! is  a mish-mash of a few different approaches.
+; The compression in Hamtaro: HHU! is a mishmash of a few different approaches.
 ;
 ; The data is organized in chunks, which can be any one of 3 different types:
 ; * Up to 127 raw bytes.
@@ -215,10 +181,10 @@ SECTION "Decompression routine", ROM0[$251A]
 ; as LZ77 with a window size as large as the Game Boy's address space).
 Decompress::
     M_DecompressionLoadValues
-    M_DecompressionMainBody Decompress_ChunkHandler_CopyRawBytes, Decompress_ChunkHandler_Rle, Decompress_ChunkHandler_Reference
+    M_DecompressionMainBody Decompress_HandleChunk_CopyRawBytes, Decompress_HandleChunk_Rle, Decompress_HandleChunk_Reference
     ret
 
-Decompress_ChunkHandler_CopyRawBytes:
+Decompress_HandleChunk_CopyRawBytes:
     ld d, a
 .copyLoop
     ldi a, [hl]
@@ -228,7 +194,7 @@ Decompress_ChunkHandler_CopyRawBytes:
     jr nz, .copyLoop
     ret
 
-Decompress_ChunkHandler_Rle:
+Decompress_HandleChunk_Rle:
     ld d, a
      
     ld a, e
@@ -281,7 +247,7 @@ Decompress_ChunkHandler_Rle:
 
     ret
 
-Decompress_ChunkHandler_Reference:
+Decompress_HandleChunk_Reference:
     ld a, e
     and a, %00000011
     ld [A_ReferenceChunk_BytesLeft + 1], a
@@ -341,11 +307,11 @@ DecompressTilemap::
     ld a, [A_TilemapDecompression_Width]
     ld [A_TilemapDecompression_TilesLeftInRow], a
 
-    M_DecompressionMainBody DecompressTilemap_ChunkHandler_CopyRawBytes, $2680, $26E2
+    M_DecompressionMainBody DecompressTilemap_HandleChunk_CopyRawBytes, $2680, $26E2
 
     ret
 
-DecompressTilemap_ChunkHandler_CopyRawBytes:
+DecompressTilemap_HandleChunk_CopyRawBytes:
     ld d, a
 
     ld a, [A_TilemapDecompression_TilesLeftInRow]
@@ -376,7 +342,7 @@ DecompressTilemap_ChunkHandler_CopyRawBytes:
 
     ret
 
-DecompressTilemap_ChunkHandler_Rle:
+DecompressTilemap_HandleChunk_Rle:
     ld d, a
     
     ld a, e
@@ -447,7 +413,7 @@ DecompressTilemap_ChunkHandler_Rle:
     
     ret
 
-DecompressTilemap_ChunkHandler_Reference:
+DecompressTilemap_HandleChunk_Reference:
     ld a, e
     and a, %00000011
     ld [A_ReferenceChunk_BytesLeft + 1], a

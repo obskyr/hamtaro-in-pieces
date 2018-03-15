@@ -1,18 +1,43 @@
-M_Decompress: MACRO
-; \1: Source address
-; \2: Source bank
+IF !DEF(MACROS_INC)
+MACROS_INC SET 1
+
+INCLUDE "constants.inc"
+
+; \1: Source bank
+; \2: Source address
 ; \3: Destination address
-    ld a, \1 & 0xFF
+M_Decompress: MACRO
+    ld a, \2 & $FF
     ld [A_Decompression_SrcAddress], a
-    ld a, (\1 >> 8) & 0xFF
+    ld a, (\2 >> 8) & $FF
+    ld [A_Decompression_SrcAddress + 1], a
+    ld a, \1
+    ld [A_Decompression_SrcBank], a
+    ld a, \3 & $FF
+    ld [A_Decompression_DestAddress], a
+    ld a, (\3 >> 8) & $FF
+    ld [A_Decompression_DestAddress + 1], a
+    call Decompress
+ENDM
+
+; \1: Tilemap width
+; \2: Source bank
+; \3: Source address
+; \4: Destination address
+M_DecompressTilemap: MACRO
+    ld a, \3 & $FF
+    ld [A_Decompression_SrcAddress], a
+    ld a, (\3 >> 8) & $FF
     ld [A_Decompression_SrcAddress + 1], a
     ld a, \2
     ld [A_Decompression_SrcBank], a
-    ld a, \3 & 0xFF
+    ld a, \1
+    ld [A_TilemapDecompression_Width], a
+    ld a, \4 & $FF
     ld [A_Decompression_DestAddress], a
-    ld a, (\3 >> 8) & 0xFF
+    ld a, (\4 >> 8) & $FF
     ld [A_Decompression_DestAddress + 1], a
-    call Decompress
+    call DecompressTilemap
 ENDM
 
 M_DecompressionLoadValues: MACRO
@@ -31,8 +56,10 @@ M_DecompressionLoadValues: MACRO
     push bc
 ENDM
 
+; \1: Address of raw bytes chunk handler
+; \2: Address of RLE chunk handler
+; \3: Address of reference chunk handler
 M_DecompressionMainBody: MACRO
-    ; \1, \2, and \3 are the handlers for the chunk types.
 
 .iterateThroughChunks
     ldi a, [hl]
@@ -76,7 +103,7 @@ M_DecompressionMainBody: MACRO
     ld [A_DecompressedData_Length + 1], a
 ENDM
 
-M_ChunkHandler_Rle: MACRO
+M_HandleChunk_Rle: MACRO
     ld d, a
     
     ld a, e
@@ -127,3 +154,5 @@ M_ChunkHandler_Rle: MACRO
     and a
     jr nz, .rleRepeatLoop
 ENDM
+
+ENDC
