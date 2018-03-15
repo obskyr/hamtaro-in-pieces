@@ -22,5 +22,8 @@ compare: $(OUTPUT_ROMS)
 $(OBJECTS): build/%.o: source/%.asm
 	rgbasm -i source/ -h -E -o $@ $<
 
-$(shell cd source && ../tools/asmdependencies $(OBJECTS:build/%.o=%.asm) > ../build/dependencies.d)
+DEPENDENCY_SCAN_EXIT_STATUS := $(shell cd source && ../tools/asmdependencies $(OBJECTS:build/%.o=%.asm) > ../build/dependencies.d; echo $$?)
+ifneq ($(DEPENDENCY_SCAN_EXIT_STATUS), 0)
+$(error Dependency scan failed)
+endif
 include build/dependencies.d
