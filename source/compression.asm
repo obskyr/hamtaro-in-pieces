@@ -1,174 +1,28 @@
-INCLUDE "constants.inc"
-INCLUDE "macros.inc"
+INCLUDE "system.inc"
+INCLUDE "compression.inc"
 
-SECTION "Interrupt vector $0", ROM0[$0000]
-    REPT 8
-    DB $FF
-    ENDR
+SECTION "Decompression routine in/out WRAM", WRAM0[$C356]
+A_Decompression_SrcAddress::
+A_DecompressedData_Address:: DW
+A_Decompression_SrcBank::
+A_DecompressedData_Bank::    DW
+A_Decompression_DestAddress::
+A_DecompressedData_Length::  DW
+A_Decompression_DestBank::   DW
 
-SECTION "Interrupt vector $8", ROM0[$0008]
-    REPT 8
-    DB $FF
-    ENDR
+SECTION "Decompression routine internal WRAM", WRAM0[$C360]
+A_RleChunk_DataLength::      DW
+A_RleChunk_RepeatsLeft::
+A_ReferenceChunk_BytesLeft:: DW
+A_RleChunk_DataAddress::     DW
 
-SECTION "Interrupt vector $10", ROM0[$0010]
-    REPT 8
-    DB $FF
-    ENDR
+SECTION "Tilemap decompression routine WRAM", WRAM0[$C36A]
+A_TilemapDecompression_Width::                   DW
+A_TilemapDecompression_TilesLeftInRow::          DB
+A_TilemapDecompression_TilesLeftInReferenceRow:: DB
+A_TilemapDecompression_TilesToSkip::             DW
 
-SECTION "Interrupt vector $18", ROM0[$0018]
-    jp $2A56 ; Which is...?
-    REPT 5
-    DB $FF
-    ENDR
-
-SECTION "Interrupt vector $20", ROM0[$0020]
-    jp $2A62 ; Which is...?
-    REPT 5
-    DB $FF
-    ENDR
-
-SECTION "Interrupt vector $28", ROM0[$0028]
-    jp $2A77 ; Which is...?
-    REPT 5
-    DB $FF
-    ENDR
-
-SECTION "Interrupt vector $30", ROM0[$0030]
-    REPT 8
-    DB $FF
-    ENDR
-
-SECTION "Interrupt vector $38", ROM0[$0038]
-Interrupt_GetStuckForever:
-    REPT 8
-    DB $FF
-    ENDR
-
-SECTION "V-blank interrupt", ROM0[$0040]
-Interrupt_VBlank:
-    jp $059A ; Call it NewFrame or whatever.
-    REPT 5
-    DB $FF
-    ENDR
-
-SECTION "LCD interrupt", ROM0[$0048]
-Interrupt_Lcd:
-    jp $085E
-    REPT 5
-    DB $FF
-    ENDR
-
-SECTION "Timer interrupt", ROM0[$0050]
-Interrupt_Timer:
-    jp $048B
-    REPT 5
-    DB $FF
-    ENDR
-
-SECTION "Serial interrupt", ROM0[$0058]
-Interrupt_Serial:
-    jp $048C
-    REPT 5
-    DB $FF
-    ENDR
-
-SECTION "Button interrupt", ROM0[$0060]
-Interrupt_Button:
-    REPT 8
-    DB $FF
-    ENDR
-
-SECTION "Unused post-interrupt space", ROM0[$0068]
-    REPT $100 - $68
-    DB $FF
-    ENDR
-
-SECTION "Entry point", ROM0[$0100]
-EntryPoint::
-    nop
-    jp Start
-
-SECTION "Start", ROM0[$0254]
-Start::
-    cp a, M_MagicIsGbc
-    ld sp, $FFFD
-    jp nz, DisplayGbcOnlyScreen
-
-    ; Sets the bottom stack return address to the entry point.
-    ld a, (EntryPoint >> 8) & $FF
-    ldh [$FFFE], a
-
-    ld a, 1
-    and b
-    jr z, .skipChangingReturnAddress
-
-    ld a, $02
-    ldh [$FFFE], a
-    
-.skipChangingReturnAddress
-    xor a
-    ; ...
-
-SECTION "GBC-only screen", ROM0[$04DD]
-DisplayGbcOnlyScreen::
-    ; Set the bottom stack return address to $0000.
-    xor a
-    ldh [$FFFE], a
-    
-    xor a
-    ld b, $7E
-    ld c, $FD
-.clearHramLoop
-    ld [$FF00+c], a
-    dec c
-    dec b
-    jr nz, .clearHramLoop
-
-.waitForVBlankLoop
-    ldh a, [A_Lcdc_YCoordinate]
-    cp a, 144
-    jr nc, .waitForVBlankLoop
-
-    ; Turn off the LCD
-    ld a, 0
-    ldh [A_Lcdc_Control], a
-    
-    ; Clear WRAM from $C000 all the way to $E000, 256 bytes at a time
-    ld c, $E0
-    ld hl, $C000
-    xor a
-.clearWramLoop
-    ldi [hl], a
-    cp l
-    jr nz, .clearWramLoop
-
-    ld a, h
-    cp c
-    ld a, l
-    jr nz, .clearWramLoop
-
-    ; Very odd to set a bunch of already cleared memory addresses to 0 here...
-    ; Might be a macro or two to set the position of the maps.
-    ld a, 0
-    ld [$C672], a
-    ld a, 0
-    ld [$C673], a
-    ldh [A_Lcdc_YScroll], a
-    ld [$C674], a
-    ldh [A_Lcdc_XScroll], a
-    ld [$C675], a
-    ldh [A_Lcdc_WindowYPos], a
-    ; Shift the window completely off the screen, I suppose.
-    ld a, 167
-    ld [$C676], a
-    ldh [A_Lcdc_WindowXPos], a
-
-    M_Decompress $5E, $4000, $8D00
-    M_Decompress $5E, $41DE, $9000
-    M_DecompressTilemap $14, $5E, $4808, $9800
-
-SECTION "Decompression routine", ROM0[$251A]
+SECTION "Decompression routines", ROM0[$251A]
 ; The compression in Hamtaro: HHU! is a mishmash of a few different approaches.
 ;
 ; The data is organized in chunks, which can be any one of 3 different types:
@@ -179,6 +33,69 @@ SECTION "Decompression routine", ROM0[$251A]
 ; That last one isn't quite LZ77, as it uses absolute addresses from the start
 ; of the data as opposed to a sliding window (although it *could* also be seen
 ; as LZ77 with a window size as large as the Game Boy's address space).
+
+M_DecompressionLoadValues: MACRO
+    ld a, [A_Decompression_SrcAddress]
+    ld l, a
+    ld a, [A_Decompression_SrcAddress + 1]
+    ld h, a
+    ld a, [A_Decompression_SrcBank]
+    ld [$C677], a
+    ld [A_RomBankControl], a
+
+    ld a, [A_Decompression_DestAddress]
+    ld c, a
+    ld a, [A_Decompression_DestAddress + 1]
+    ld b, a
+    push bc
+ENDM
+
+; \1: Address of raw bytes chunk handler
+; \2: Address of RLE chunk handler
+; \3: Address of reference chunk handler
+M_DecompressionMainBody: MACRO
+.iterateThroughChunks
+    ldi a, [hl]
+    ld e, a
+    and a
+    jr z, .finished
+
+    cp a, 128
+    jr c, .isPositive
+
+    and a, $7C
+    cp a, $7C
+    jr z, .isBetweenFCAndFE
+
+    jr .else
+
+.isPositive
+    call \1
+    jr .iterateThroughChunks
+.else
+    call \2
+    jr .iterateThroughChunks
+.isBetweenFCAndFE
+    call \3
+    jr .iterateThroughChunks
+
+.finished
+    ld a, [A_Decompression_DestAddress]
+    ld [A_DecompressedData_Address], a
+    ld a, [A_Decompression_DestAddress + 1]
+    ld [A_DecompressedData_Address + 1], a
+    ld a, [A_Decompression_DestBank]
+    ld [A_DecompressedData_Bank], a
+
+    pop hl
+    ld a, c
+    sub l
+    ld [A_DecompressedData_Length], a
+    ld a, b
+    sbc h
+    ld [A_DecompressedData_Length + 1], a
+ENDM
+
 Decompress::
     M_DecompressionLoadValues
     M_DecompressionMainBody Decompress_HandleChunk_CopyRawBytes, Decompress_HandleChunk_Rle, Decompress_HandleChunk_Reference

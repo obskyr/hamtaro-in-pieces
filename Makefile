@@ -3,7 +3,7 @@
 BASE_ROM = base.gbc
 
 OUTPUT_ROMS = Hamtaro\ -\ Ham-Hams\ Unite!\ (U).gbc
-OBJECTS_WITHOUT_BUILD_DIRECTORY = hamtaro.o wram.o
+OBJECTS_WITHOUT_BUILD_DIRECTORY = entry_points.o startup.o compression.o
 OBJECTS = $(OBJECTS_WITHOUT_BUILD_DIRECTORY:%.o=build/%.o)
 
 all: $(OUTPUT_ROMS) compare

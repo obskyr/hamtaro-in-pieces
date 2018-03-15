@@ -1,10 +1,8 @@
-IF !DEF(CONSTANTS_INC)
-CONSTANTS_INC SET 1
+IF !DEF(SYSTEM_INC)
+SYSTEM_INC SET 1
 
-; M stands for "macro".
-M_MagicIsGbc EQU $11
+M_MagicIsGbc EQU $11 ; Also GBA.
 
-; A stands for "address".
 A_RomBankControl  EQU $2000
 A_WramBankControl EQU $FF70
 
