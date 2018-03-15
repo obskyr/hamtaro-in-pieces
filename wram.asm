@@ -13,3 +13,9 @@ A_RleChunk_DataLength::      DW
 A_RleChunk_RepeatsLeft::
 A_ReferenceChunk_BytesLeft:: DW
 A_RleChunk_DataAddress::     DW
+
+SECTION "Tilemap decompression routine WRAM", WRAM0[$C36A]
+A_TilemapDecompression_Width::                   DW
+A_TilemapDecompression_TilesLeftInRow::          DB
+A_TilemapDecompression_TilesLeftInReferenceRow:: DB
+A_TilemapDecompression_TilesToSkip::             DW

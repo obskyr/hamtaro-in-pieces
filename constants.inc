@@ -2,7 +2,8 @@
 M_MagicIsGbc EQU $11
 
 ; A stands for "address".
-A_BankNumberControl EQU $2000
+A_RomBankControl  EQU $2000
+A_WramBankControl EQU $FF70
 
 A_Lcdc_Control     EQU $FF40
 A_Lcdc_YScroll     EQU $FF42
