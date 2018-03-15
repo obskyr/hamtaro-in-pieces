@@ -149,6 +149,7 @@ DisplayGbcOnlyScreen::
     jr nz, .clearWramLoop
 
     ; Very odd to set a bunch of already cleared memory addresses to 0 here...
+    ; Might be a macro or two to set the position of the maps.
     ld a, 0
     ld [$C672], a
     ld a, 0
@@ -158,7 +159,6 @@ DisplayGbcOnlyScreen::
     ldh [A_Lcdc_XScroll], a
     ld [$C675], a
     ldh [A_Lcdc_WindowYPos], a
-    
     ; Shift the window completely off the screen, I suppose.
     ld a, 167
     ld [$C676], a
@@ -289,11 +289,11 @@ Decompress_HandleChunk_Reference:
     pop hl
     ret
 
+; The difference between Decompress and DecompressTilemap is that
+; DecompressTilemap supports skipping the destination address forward
+; when the end of a row of tiles is reached, so that tilemaps may be
+; less wide than 32 tiles and not waste CPU time.
 DecompressTilemap::
-    ; The difference between Decompress and DecompressTilemap is that
-    ; DecompressTilemap supports skipping the destination address forward
-    ; when the end of a row of tiles is reached, so that tilemaps may be
-    ; less wide than 32 tiles and not waste CPU time.
     ld a, [A_TilemapDecompression_Width]
     ld l, a
     ld a, $20
@@ -364,7 +364,7 @@ DecompressTilemap_HandleChunk_Rle:
     ld [A_RleChunk_DataAddress], a
     ld a, h
     ld [A_RleChunk_DataAddress + 1], a
-    ld a, [$C36C]
+    ld a, [A_TilemapDecompression_TilesLeftInRow]
     ld d, a
 
 .rleRepeatLoop
