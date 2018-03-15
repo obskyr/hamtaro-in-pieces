@@ -79,3 +79,16 @@ DisplayGbcOnlyScreen::
     M_Decompress $5E, $4000, $8D00
     M_Decompress $5E, $41DE, $9000
     M_DecompressTilemap $14, $5E, $4808, $9800
+
+    ; Black, dark gray, light gray, white.
+    ld a, $E4
+    ldh [A_Lcdc_GbMapPalette], a
+    ld a, M_Lcdc_Enabled | M_Lcdc_WindowUsesSecondTilemap | M_Lcdc_TallSprites | M_Lcdc_BgOn
+    ld [$C672], a
+    ldh [A_Lcdc_Control], a
+
+.doNothingForever
+    nop
+    nop
+    nop
+    jr .doNothingForever
