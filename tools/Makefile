@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-TOOLS = asmdependencies decompress
+TOOLS = asmdependencies decompress decodegraphics
 
 all: $(TOOLS)
 
