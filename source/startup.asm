@@ -17,9 +17,79 @@ Start::
 
     ld a, $02
     ldh [$FFFE], a
-    
+  
 .skipChangingReturnAddress
     xor a
+    ld b, $7E
+    ld c, $FD
+.clearHramLoop
+    ld [$FF00+c], a
+    dec c
+    dec b
+    jr nz, .clearHramLoop
+
+    di
+    xor a
+    ldh [A_IrPortControl], a
+    ldh [A_WramBankControl], a
+    ldh [A_VramBankControl], a
+
+.waitForVBlankLoop
+    ldh a, [A_Lcdc_CurrentY]
+    cp a, 144
+    jr nc, .waitForVBlankLoop
+
+    M_Lcdc_SetControl 0
+
+    ; If the CPU is already in double-speed mode, setup has already been done.
+    ldh a, [A_CpuSpeed]
+    bit 7, a
+    jr nz, .setupComplete
+
+    set 0, a
+    ldh [A_CpuSpeed], a
+    
+    xor a
+    ldh [A_InterruptControl], a
+    ldh [A_InterruptFlags], a
+
+    ld a, M_Buttons_NoneSelected
+    ld [A_Buttons], a
+
+    stop ; The requested CPU speed is activated using a stop.
+
+.waitForCpuSpeedSwitch
+    ldh a, [A_CpuSpeed]
+    bit 7, a
+    jr z, .waitForCpuSpeedSwitch
+
+    xor a
+    ldh [A_Buttons], a
+    ldh [A_InterruptControl], a
+    ldh [A_InterruptFlags], a
+
+.setupComplete
+    di
+    ld sp, $FFFD
+
+    ld b, $07
+    ld c, $E0
+    ld hl, $C000
+
+    ld a, b
+    ld [A_WramBankControl], a
+
+    xor a
+.clearWramBankLoop
+    ldi [hl], a
+    cp l
+    jr nz, .clearWramBankLoop
+    
+    ld a, h
+    cp c
+    ld a, l
+    jr nz, .clearWramBankLoop
+
     ; ...
 
 SECTION "GBC-only screen", ROM0[$04DD]
@@ -38,27 +108,25 @@ DisplayGbcOnlyScreen::
     jr nz, .clearHramLoop
 
 .waitForVBlankLoop
-    ldh a, [A_Lcdc_YCoordinate]
+    ldh a, [A_Lcdc_CurrentY]
     cp a, 144
     jr nc, .waitForVBlankLoop
 
-    ; Turn off the LCD
-    ld a, 0
-    ldh [A_Lcdc_Control], a
-    
+    M_Lcdc_SetControl 0
+
     ; Clear WRAM from $C000 all the way to $E000, 256 bytes at a time
     ld c, $E0
     ld hl, $C000
     xor a
-.clearWramLoop
+.clearWramBankLoop
     ldi [hl], a
     cp l
-    jr nz, .clearWramLoop
+    jr nz, .clearWramBankLoop
 
     ld a, h
     cp c
     ld a, l
-    jr nz, .clearWramLoop
+    jr nz, .clearWramBankLoop
 
     ; Very odd to set a bunch of already cleared memory addresses to 0 here...
     ; Might be a macro or two to set the position of the maps.
