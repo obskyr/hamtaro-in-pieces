@@ -98,7 +98,9 @@ ENDM
 
 Decompress::
     M_DecompressionLoadValues
-    M_DecompressionMainBody Decompress_HandleChunk_CopyRawBytes, Decompress_HandleChunk_Rle, Decompress_HandleChunk_Reference
+    M_DecompressionMainBody Decompress_HandleChunk_CopyRawBytes, \
+                            Decompress_HandleChunk_Rle, \
+                            Decompress_HandleChunk_Reference
     ret
 
 Decompress_HandleChunk_CopyRawBytes:
@@ -224,7 +226,9 @@ DecompressTilemap::
     ld a, [A_TilemapDecompression_Width]
     ld [A_TilemapDecompression_TilesLeftInRow], a
 
-    M_DecompressionMainBody DecompressTilemap_HandleChunk_CopyRawBytes, $2680, $26E2
+    M_DecompressionMainBody DecompressTilemap_HandleChunk_CopyRawBytes, \
+                            DecompressTilemap_HandleChunk_Rle, \
+                            DecompressTilemap_HandleChunk_Reference
 
     ret
 

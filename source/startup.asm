@@ -151,7 +151,10 @@ DisplayGbcOnlyScreen::
     ; Black, dark gray, light gray, white.
     ld a, $E4
     ldh [A_Lcdc_GbMapPalette], a
-    ld a, M_Lcdc_Enabled | M_Lcdc_WindowUsesSecondTilemap | M_Lcdc_TallSprites | M_Lcdc_BgOn
+    ld a, M_Lcdc_Enabled | \
+          M_Lcdc_WindowUsesSecondTilemap | \
+          M_Lcdc_TallSprites | \
+          M_Lcdc_BgOn
     ld [$C672], a
     ldh [A_Lcdc_Control], a
 
