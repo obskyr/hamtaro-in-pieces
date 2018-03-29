@@ -7,13 +7,13 @@ COMPRESSION_INC SET 1
 M_Decompress: MACRO
     ld a, \2 & $FF
     ld [A_Decompression_SrcAddress], a
-    ld a, (\2 >> 8) & $FF
+    ld a, \2 >> 8
     ld [A_Decompression_SrcAddress + 1], a
     ld a, \1
     ld [A_Decompression_SrcBank], a
     ld a, \3 & $FF
     ld [A_Decompression_DestAddress], a
-    ld a, (\3 >> 8) & $FF
+    ld a, \3 >> 8
     ld [A_Decompression_DestAddress + 1], a
     call Decompress
 ENDM
@@ -25,7 +25,7 @@ ENDM
 M_DecompressTilemap: MACRO
     ld a, \3 & $FF
     ld [A_Decompression_SrcAddress], a
-    ld a, (\3 >> 8) & $FF
+    ld a, \3 >> 8
     ld [A_Decompression_SrcAddress + 1], a
     ld a, \2
     ld [A_Decompression_SrcBank], a
@@ -33,7 +33,7 @@ M_DecompressTilemap: MACRO
     ld [A_TilemapDecompression_Width], a
     ld a, \4 & $FF
     ld [A_Decompression_DestAddress], a
-    ld a, (\4 >> 8) & $FF
+    ld a, \4 >> 8
     ld [A_Decompression_DestAddress + 1], a
     call DecompressTilemap
 ENDM

@@ -1,5 +1,35 @@
 INCLUDE "system.inc"
 
+; \1: Address to bank control register
+; \2: Bank to clear up to
+; \3: Address to start clearing at
+; \4: Address switchable banks start at
+; \5: Address to stop clearing at (rounded down to nearest multiple of 0x100)
+M_ClearBanks: MACRO
+    ld b, \2
+    ld c, \5 >> 8
+    ld hl, \3
+
+.switchAndClearBankLoop\@
+    ld a, b
+    ldh [\1], a
+
+    xor a
+.clearBankLoop\@
+    ld [hl+], a
+    cp l
+    jr nz, .clearBankLoop\@
+    
+    ld a, h
+    cp c
+    ld a, l
+    jr nz, .clearBankLoop\@
+
+    dec b
+    ld hl, \4
+    jr nz, .switchAndClearBankLoop\@
+ENDM
+
 SECTION "Start", ROM0[$0254]
 Start::
     cp a, M_MagicIsGbc
@@ -7,7 +37,7 @@ Start::
     jp nz, DisplayGbcOnlyScreen
 
     ; Sets the bottom stack return address to the entry point.
-    ld a, (EntryPoint >> 8) & $FF
+    ld a, EntryPoint >> 8
     ldh [$FFFE], a
 
     ld a, 1
@@ -71,29 +101,7 @@ Start::
     di
     ld sp, $FFFD
 
-    ; Banks 0-7 (inclusive) are cleared.
-    ld b, $07
-    ld c, $E0
-    ld hl, $C000
-
-.switchAndClearWramBankLoop
-    ld a, b
-    ldh [A_WramBankControl], a
-
-    xor a
-.clearWramBankLoop
-    ld [hl+], a
-    cp l
-    jr nz, .clearWramBankLoop
-    
-    ld a, h
-    cp c
-    ld a, l
-    jr nz, .clearWramBankLoop
-
-    dec b
-    ld hl, $D000
-    jr nz, .switchAndClearWramBankLoop
+    M_ClearBanks A_WramBankControl, $07, $C000, $D000, $E000
 
     ld a, $01
     ldh [A_WramBankControl], a
@@ -108,29 +116,7 @@ Start::
 
     call SetPalettes
 
-    ld b, $01
-    ld c, $A0
-    ld hl, $8000
-.clearVramLoop
-    ld a, b
-    ldh [A_VramBankControl], a
-
-    xor a
-.clearVramBankLoop
-    ld [hl+], a
-    cp l
-    jr nz, .clearVramBankLoop
-
-    ld a, h
-    cp c
-    ld a, l
-    jr nz, .clearVramBankLoop
-
-    ; Bit odd, this - since b is set to 1, this jump will
-    ; never trigger. Maybe a clearing macro of some sort?
-    dec b
-    ld hl, $8000
-    jr nz, .clearVramLoop
+    M_ClearBanks A_VramBankControl, $01, $8000, $8000, $A000
 
     ; ...
 
