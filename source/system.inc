@@ -34,6 +34,13 @@ A_CpuSpeed EQU $FF4D
 
 A_IrPortControl EQU $FF56
 
+M_Palette_AutoIncrement EQU %10000000
+
+A_Palette_Bg_Index     EQU $FF68
+A_Palette_Bg_Data      EQU $FF69
+A_Palette_Sprite_Index EQU $FF6A
+A_Palette_Sprite_Data  EQU $FF6B
+
 M_Lcdc_SetControl: MACRO
     ld a, \1
     ldh [A_Lcdc_Control], a

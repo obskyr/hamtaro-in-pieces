@@ -72,12 +72,14 @@ Start::
     di
     ld sp, $FFFD
 
+    ; Banks 0-7 (inclusive) are cleared.
     ld b, $07
     ld c, $E0
     ld hl, $C000
 
+.switchAndClearWramBankLoop
     ld a, b
-    ld [A_WramBankControl], a
+    ldh [A_WramBankControl], a
 
     xor a
 .clearWramBankLoop
@@ -90,7 +92,70 @@ Start::
     ld a, l
     jr nz, .clearWramBankLoop
 
+    dec b
+    ld hl, $D000
+    jr nz, .switchAndClearWramBankLoop
+
+    ld a, $01
+    ldh [A_WramBankControl], a
+    ld hl, A_BgPaletteData + 64 + 64 - 1
+    
+    ld c, 64 + 64
+    ld a, $FF
+.clearPaletteLoop
+    ld [hl-], a
+    dec c
+    jr nz, .clearPaletteLoop
+
+    call SetPalettes
+
     ; ...
+
+SECTION "Active palette data", WRAMX[$DD9A], BANK[$01]
+A_BgPaletteData::
+    REPT 32
+    DW
+    ENDR
+A_SpritePaletteData::
+    REPT 32
+    DW
+    ENDR
+
+SECTION "Function to set palettes from WRAM", ROM0[$078F]
+SetPalettes::
+    ldh a, [A_WramBankControl]
+    push af
+
+    ld a, $01
+    ld [A_WramBankControl], a
+    ld hl, A_BgPaletteData
+
+    ld a, M_Palette_AutoIncrement | $00
+    ldh [A_Palette_Bg_Index], a
+
+    ld b, 64
+.copyBgPaletteLoop
+    ld a, [hl+]
+    ldh [A_Palette_Bg_Data], a
+    dec b
+    jr nz, .copyBgPaletteLoop
+
+    ld hl, A_SpritePaletteData
+
+    ld a, M_Palette_AutoIncrement | $00
+    ldh [A_Palette_Sprite_Index], a
+
+    ld b, 64
+.copySpritePaletteLoop
+    ld a, [hl+]
+    ldh [A_Palette_Sprite_Data], a
+    dec b
+    jr nz, .copySpritePaletteLoop
+
+    pop af
+    ldh [A_WramBankControl], a
+    ret
+    ret ; Don't ask me!
 
 SECTION "GBC-only screen", ROM0[$04DD]
 DisplayGbcOnlyScreen::
