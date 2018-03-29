@@ -55,7 +55,7 @@ ENDM
 ; \3: Address of reference chunk handler
 M_DecompressionMainBody: MACRO
 .iterateThroughChunks
-    ldi a, [hl]
+    ld a, [hl+]
     ld e, a
     and a
     jr z, .finished
@@ -106,7 +106,7 @@ Decompress::
 Decompress_HandleChunk_CopyRawBytes:
     ld d, a
 .copyLoop
-    ldi a, [hl]
+    ld a, [hl+]
     ld [bc], a
     inc bc
     dec d
@@ -119,7 +119,7 @@ Decompress_HandleChunk_Rle:
     ld a, e
     and a, %00000011
     ld [A_RleChunk_RepeatsLeft + 1], a
-    ldi a, [hl]
+    ld a, [hl+]
     ld [A_RleChunk_RepeatsLeft], a
 
     ld a, d
@@ -145,7 +145,7 @@ Decompress_HandleChunk_Rle:
     ld e, a
 
 .copyLoop
-    ldi a, [hl]
+    ld a, [hl+]
     ld [bc], a
     inc bc
     dec e
@@ -170,12 +170,12 @@ Decompress_HandleChunk_Reference:
     ld a, e
     and a, %00000011
     ld [A_ReferenceChunk_BytesLeft + 1], a
-    ldi a, [hl]
+    ld a, [hl+]
     ld [A_ReferenceChunk_BytesLeft], a
 
-    ldi a, [hl]
+    ld a, [hl+]
     ld e, a
-    ldi a, [hl]
+    ld a, [hl+]
     ld d, a
     push hl
 
@@ -197,7 +197,7 @@ Decompress_HandleChunk_Reference:
     inc d
 
 .copyLoop
-    ldi a, [hl]
+    ld a, [hl+]
     ld [bc], a
     inc bc
     dec e
@@ -239,7 +239,7 @@ DecompressTilemap_HandleChunk_CopyRawBytes:
     ld e, a
 
 .copyLoop
-    ldi a, [hl]
+    ld a, [hl+]
     ld [bc], a
     dec e
     jr nz, .skipSkippingForward
@@ -269,7 +269,7 @@ DecompressTilemap_HandleChunk_Rle:
     ld a, e
     and a, %00000011
     ld [A_RleChunk_RepeatsLeft + 1], a
-    ldi a, [hl]
+    ld a, [hl+]
     ld [A_RleChunk_RepeatsLeft], a
 
     ld a, d
@@ -297,7 +297,7 @@ DecompressTilemap_HandleChunk_Rle:
     ld e, a
 
 .copyLoop
-    ldi a, [hl]
+    ld a, [hl+]
     ld [bc], a
     dec d
     jr nz, .skipSkippingForward
@@ -338,12 +338,12 @@ DecompressTilemap_HandleChunk_Reference:
     ld a, e
     and a, %00000011
     ld [A_ReferenceChunk_BytesLeft + 1], a
-    ldi a, [hl]
+    ld a, [hl+]
     ld [A_ReferenceChunk_BytesLeft], a
 
-    ldi a, [hl]
+    ld a, [hl+]
     ld e, a
-    ldi a, [hl]
+    ld a, [hl+]
     ld d, a
     push hl
     push bc

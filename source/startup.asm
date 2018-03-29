@@ -81,7 +81,7 @@ Start::
 
     xor a
 .clearWramBankLoop
-    ldi [hl], a
+    ld [hl+], a
     cp l
     jr nz, .clearWramBankLoop
     
