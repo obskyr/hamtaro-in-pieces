@@ -1,9 +1,11 @@
 .PHONY: all clean
 
 BASE_ROM = base.gbc
-
 OUTPUT_ROMS = Hamtaro\ -\ Ham-Hams\ Unite!\ (U).gbc
-OBJECTS_WITHOUT_BUILD_DIRECTORY = entry_points.o startup.o compression.o
+
+OBJECTS_WITHOUT_BUILD_DIRECTORY = \
+	entry_points.o startup.o compression.o gbc_only_screen.o
+
 OBJECTS = $(OBJECTS_WITHOUT_BUILD_DIRECTORY:%.o=build/%.o)
 
 all: $(OUTPUT_ROMS) compare
