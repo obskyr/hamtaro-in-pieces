@@ -108,6 +108,30 @@ Start::
 
     call SetPalettes
 
+    ld b, $01
+    ld c, $A0
+    ld hl, $8000
+.clearVramLoop
+    ld a, b
+    ldh [A_VramBankControl], a
+
+    xor a
+.clearVramBankLoop
+    ld [hl+], a
+    cp l
+    jr nz, .clearVramBankLoop
+
+    ld a, h
+    cp c
+    ld a, l
+    jr nz, .clearVramBankLoop
+
+    ; Bit odd, this - since b is set to 1, this jump will
+    ; never trigger. Maybe a clearing macro of some sort?
+    dec b
+    ld hl, $8000
+    jr nz, .clearVramLoop
+
     ; ...
 
 SECTION "Active palette data", WRAMX[$DD9A], BANK[$01]
