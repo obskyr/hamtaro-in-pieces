@@ -104,7 +104,7 @@ Decompress::
                             Decompress_HandleChunk_Reference
     ret
 
-Decompress_HandleChunk_CopyRawBytes:
+Decompress_HandleChunk_CopyRawBytes::
     ld d, a
 .copyLoop
     ld a, [hl+]
@@ -114,7 +114,7 @@ Decompress_HandleChunk_CopyRawBytes:
     jr nz, .copyLoop
     ret
 
-Decompress_HandleChunk_Rle:
+Decompress_HandleChunk_Rle::
     ld d, a
      
     ld a, e
@@ -167,7 +167,7 @@ Decompress_HandleChunk_Rle:
 
     ret
 
-Decompress_HandleChunk_Reference:
+Decompress_HandleChunk_Reference::
     ld a, e
     and a, %00000011
     ld [A_ReferenceChunk_BytesLeft + 1], a
@@ -233,7 +233,7 @@ DecompressTilemap::
 
     ret
 
-DecompressTilemap_HandleChunk_CopyRawBytes:
+DecompressTilemap_HandleChunk_CopyRawBytes::
     ld d, a
 
     ld a, [A_TilemapDecompression_TilesLeftInRow]
@@ -264,7 +264,7 @@ DecompressTilemap_HandleChunk_CopyRawBytes:
 
     ret
 
-DecompressTilemap_HandleChunk_Rle:
+DecompressTilemap_HandleChunk_Rle::
     ld d, a
     
     ld a, e
@@ -335,7 +335,7 @@ DecompressTilemap_HandleChunk_Rle:
     
     ret
 
-DecompressTilemap_HandleChunk_Reference:
+DecompressTilemap_HandleChunk_Reference::
     ld a, e
     and a, %00000011
     ld [A_ReferenceChunk_BytesLeft + 1], a
