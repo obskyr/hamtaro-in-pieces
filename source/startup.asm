@@ -1,4 +1,7 @@
 INCLUDE "system.inc"
+INCLUDE "common.inc"
+
+M_Signature EQUS "\"HAMTARO2 Paxsoftnica. 2000/11/21\""
 
 ; \1: Address to bank control register
 ; \2: Bank to clear up to
@@ -29,6 +32,10 @@ M_ClearBanks: MACRO
     ld hl, \4
     jr nz, .switchAndClearBankLoop\@
 ENDM
+
+SECTION "Signature", ROMX[$579F], BANK[$04]
+Signature::
+    DB M_Signature
 
 SECTION "Start", ROM0[$0254]
 Start::
@@ -118,7 +125,127 @@ Start::
 
     M_ClearBanks A_VramBankControl, $01, $8000, $8000, $A000
 
+    ; Time to check that the save isn't nonexistent or garbage.
+    xor a
+    ld [A_Mbc5_RamBankControl], a
+    M_Mbc5_EnableExternalRam
+
+    ld a, BANK(Signature)
+    ld [A_Mbc5_RomBankControl], a
+
+    ld hl, Signature
+    ld de, $A000
+    ld c, STRLEN(M_Signature)
+.compareSaveSignatureLoop
+    ld a, [de]
+    cp [hl]
+    jr nz, .signatureDoesNotMatch
+    inc hl
+    inc de
+    dec c
+    jr nz, .compareSaveSignatureLoop
+
+    M_Mbc5_DisableExternalRam
+
+    jr .saveSignatureIsValid
+
+.signatureDoesNotMatch
+    ; If there isn't a valid signature in the beginning of the save,
+    ; it's either blank or corrupted, so it's cleared out and reinitialized.
+    xor a
+    ld hl, $A000
+    ld bc, $2000
+
+.clearSaveLoop
+    ld [hl+], a
+    dec c
+    jr nz, .clearSaveLoop
+
+    dec b
+    jr nz, .clearSaveLoop
+
+    ; Gotta disassemble these.
+    M_CrossBankCall $00, $3889
+    M_CrossBankCall $03, $5D63
+    M_CrossBankCall $03, $5D63
+
+    ld a, BANK(Signature)
+    ld [A_Mbc5_RomBankControl], a
+    ld hl, Signature
+    ld de, $A000
+    ld c, STRLEN(M_Signature)
+    
+    xor a
+    ld [A_Mbc5_RamBankControl], a
+    M_Mbc5_EnableExternalRam
+
+.copySignatureLoop
+    ld a, [hl+]
+    ld [de], a
+    inc de
+    dec c
+    jr nz, .copySignatureLoop
+
+    M_Mbc5_DisableExternalRam
+
+.saveSignatureIsValid
     ; ...
+
+SECTION "Bank-related interrupt functions", ROM0[$2A47]
+SwitchBank::
+    push af
+    di
+
+    ld [A_CurrentRomBank], a
+    ld [A_Mbc5_RomBankControl], a
+    xor a
+    ld [A_Mbc5_RamBankControl_HighBit], a
+    
+    ei
+    pop af
+    ret
+
+CrossBankJump::
+    pop hl
+
+    ld a, [hl+]
+    ld e, a
+    ld a, [hl+]
+    ld d, a
+    ld a, [hl+]
+    call SwitchBank
+    
+    ld l, e
+    ld h, d
+    jp hl
+
+; This might need to be renamed, based on how it's used later.
+; It doesn't actually switch the bank *back* after calling,
+; but rather leaves that to the destination function if at all.
+;
+; Arguments for this comes in the form of data after the rst/call:
+; DW address of code to call
+; DB bank of code to call
+CrossBankCall::
+    pop hl
+
+    ld a, [A_CurrentRomBank]
+    ld e, a
+    ld a, 0
+    ld d, a
+    push de
+
+    ld a, [hl+]
+    ld e, a
+    ld a, [hl+]
+    ld d, a
+    ld a, [hl+]
+    push hl
+    call SwitchBank
+
+    ld l, e
+    ld h, d
+    jp hl
 
 SECTION "Active palette data", WRAMX[$DD9A], BANK[$01]
 A_BgPaletteData::

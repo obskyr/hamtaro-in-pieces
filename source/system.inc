@@ -3,7 +3,6 @@ SYSTEM_INC SET 1
 
 M_MagicIsGbc EQU $11 ; Also GBA.
 
-A_RomBankControl  EQU $2000
 A_VramBankControl EQU $FF4F
 A_WramBankControl EQU $FF70
 
@@ -41,9 +40,23 @@ A_Palette_Bg_Data      EQU $FF69
 A_Palette_Sprite_Index EQU $FF6A
 A_Palette_Sprite_Data  EQU $FF6B
 
+A_Mbc5_RomBankControl         EQU $2000
+A_Mbc5_RamBankControl_HighBit EQU $3000
+A_Mbc5_RamBankControl         EQU $4000
+
 M_Lcdc_SetControl: MACRO
     ld a, \1
     ldh [A_Lcdc_Control], a
+ENDM
+
+M_Mbc5_EnableExternalRam: MACRO
+    ld a, $0A
+    ld [$0000], a
+ENDM
+
+M_Mbc5_DisableExternalRam: MACRO
+    xor a
+    ld [$0000], a
 ENDM
 
 ENDC

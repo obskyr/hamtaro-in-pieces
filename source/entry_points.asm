@@ -13,14 +13,16 @@ SECTION "Interrupt vector $10", ROM0[$0010]
     DB $FF
     ENDR
 
-SECTION "Interrupt vector $18", ROM0[$0018]
-    jp $2A56 ; Which is...?
+SECTION "Interrupt vector $18: cross-bank jump", ROM0[$0018]
+Interrupt_CrossBankJump:
+    jp CrossBankJump
     REPT 5
     DB $FF
     ENDR
 
-SECTION "Interrupt vector $20", ROM0[$0020]
-    jp $2A62 ; Which is...?
+SECTION "Interrupt vector $20: cross-bank call", ROM0[$0020]
+Interrupt_CrossBankCall:
+    jp CrossBankCall
     REPT 5
     DB $FF
     ENDR

@@ -4,7 +4,7 @@ BASE_ROM = base.gbc
 OUTPUT_ROMS = Hamtaro\ -\ Ham-Hams\ Unite!\ (U).gbc
 
 OBJECTS_WITHOUT_BUILD_DIRECTORY = \
-	entry_points.o startup.o compression.o gbc_only_screen.o
+	entry_points.o startup.o compression.o gbc_only_screen.o common.o
 
 OBJECTS = $(OBJECTS_WITHOUT_BUILD_DIRECTORY:%.o=build/%.o)
 

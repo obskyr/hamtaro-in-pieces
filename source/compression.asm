@@ -1,4 +1,5 @@
 INCLUDE "system.inc"
+INCLUDE "common.inc"
 INCLUDE "compression.inc"
 
 SECTION "Decompression routine in/out WRAM", WRAM0[$C356]
@@ -40,8 +41,8 @@ M_DecompressionLoadValues: MACRO
     ld a, [A_Decompression_SrcAddress + 1]
     ld h, a
     ld a, [A_Decompression_SrcBank]
-    ld [$C677], a
-    ld [A_RomBankControl], a
+    ld [A_CurrentRomBank], a
+    ld [A_Mbc5_RomBankControl], a
 
     ld a, [A_Decompression_DestAddress]
     ld c, a
