@@ -3,6 +3,10 @@ INCLUDE "common.inc"
 
 M_Signature EQUS "\"HAMTARO2 Paxsoftnica. 2000/11/21\""
 
+SECTION "Signature", ROMX[$579F], BANK[$04]
+Signature::
+    DB M_Signature
+
 ; \1: Address to bank control register
 ; \2: Bank to clear up to
 ; \3: Address to start clearing at
@@ -32,10 +36,6 @@ M_ClearBanks: MACRO
     ld hl, \4
     jr nz, .switchAndClearBankLoop\@
 ENDM
-
-SECTION "Signature", ROMX[$579F], BANK[$04]
-Signature::
-    DB M_Signature
 
 SECTION "Start", ROM0[$0254]
 Start::
@@ -190,105 +190,3 @@ Start::
 
 .saveSignatureIsValid
     ; ...
-
-SECTION "Bank-related interrupt functions", ROM0[$2A47]
-SwitchBank::
-    push af
-    di
-
-    ld [A_CurrentRomBank], a
-    ld [A_Mbc5_RomBankControl], a
-    xor a
-    ld [A_Mbc5_RamBankControl_HighBit], a
-    
-    ei
-    pop af
-    ret
-
-CrossBankJump::
-    pop hl
-
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl+]
-    ld d, a
-    ld a, [hl+]
-    call SwitchBank
-    
-    ld l, e
-    ld h, d
-    jp hl
-
-; This might need to be renamed, based on how it's used later.
-; It doesn't actually switch the bank *back* after calling,
-; but rather leaves that to the destination function if at all.
-;
-; Arguments for this comes in the form of data after the rst/call:
-; DW address of code to call
-; DB bank of code to call
-CrossBankCall::
-    pop hl
-
-    ld a, [A_CurrentRomBank]
-    ld e, a
-    ld a, 0
-    ld d, a
-    push de
-
-    ld a, [hl+]
-    ld e, a
-    ld a, [hl+]
-    ld d, a
-    ld a, [hl+]
-    push hl
-    call SwitchBank
-
-    ld l, e
-    ld h, d
-    jp hl
-
-SECTION "Active palette data", WRAMX[$DD9A], BANK[$01]
-A_BgPaletteData::
-    REPT 32
-    DW
-    ENDR
-A_SpritePaletteData::
-    REPT 32
-    DW
-    ENDR
-
-SECTION "Function to set palettes from WRAM", ROM0[$078F]
-SetPalettes::
-    ldh a, [A_WramBankControl]
-    push af
-
-    ld a, $01
-    ld [A_WramBankControl], a
-    ld hl, A_BgPaletteData
-
-    ld a, M_Palette_AutoIncrement | $00
-    ldh [A_Palette_Bg_Index], a
-
-    ld b, 64
-.copyBgPaletteLoop
-    ld a, [hl+]
-    ldh [A_Palette_Bg_Data], a
-    dec b
-    jr nz, .copyBgPaletteLoop
-
-    ld hl, A_SpritePaletteData
-
-    ld a, M_Palette_AutoIncrement | $00
-    ldh [A_Palette_Sprite_Index], a
-
-    ld b, 64
-.copySpritePaletteLoop
-    ld a, [hl+]
-    ldh [A_Palette_Sprite_Data], a
-    dec b
-    jr nz, .copySpritePaletteLoop
-
-    pop af
-    ldh [A_WramBankControl], a
-    ret
-    ret ; Don't ask me!
