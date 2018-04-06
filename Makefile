@@ -9,7 +9,7 @@ OBJECTS = $(ASM_FILES:source/%.asm=build/%.o)
 all: $(OUTPUT_ROMS) compare
 
 clean:
-	rm -f build/*
+	rm -rf build/*
 
 $(OUTPUT_ROMS): $(OBJECTS)
 	rgblink -n "$(@:.gbc=.sym)" -O "$(BASE_ROM)" -o "$@" $^
@@ -20,9 +20,14 @@ compare: $(OUTPUT_ROMS)
 
 # rgbasm -h doesn't put in automatic nops after halts.
 $(OBJECTS): build/%.o: source/%.asm
+	@mkdir -p $(@D)
 	rgbasm -i source/ -h -E -o $@ $<
 
-DEPENDENCY_SCAN_EXIT_STATUS := $(shell tools/asmdependencies -s source/ $(ASM_FILES:source/%=%) > build/dependencies.d; echo $$?)
+build/%.2bpp: source/%.png source/%.args
+	@mkdir -p $(@D)
+	tools/dazzlie encode --format gb_2bpp $(shell cat source/$*.args) -i $< -o $@
+
+DEPENDENCY_SCAN_EXIT_STATUS := $(shell tools/asmdependencies -s source/ -b build/ $(ASM_FILES:source/%=%) > build/dependencies.d; echo $$?)
 ifneq ($(DEPENDENCY_SCAN_EXIT_STATUS), 0)
 $(error Dependency scan failed)
 endif
