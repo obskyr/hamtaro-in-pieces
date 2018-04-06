@@ -3,11 +3,8 @@
 BASE_ROM = base.gbc
 OUTPUT_ROMS = Hamtaro\ -\ Ham-Hams\ Unite!\ (U).gbc
 
-OBJECTS_WITHOUT_BUILD_DIRECTORY = \
-	entry_points.o startup.o compression.o gbc_only_screen.o common.o \
-	interrupts.o graphics.o
-
-OBJECTS = $(OBJECTS_WITHOUT_BUILD_DIRECTORY:%.o=build/%.o)
+ASM_FILES := $(shell find source/ -type f -name "*.asm")
+OBJECTS = $(ASM_FILES:source/%.asm=build/%.o)
 
 all: $(OUTPUT_ROMS) compare
 
@@ -25,7 +22,7 @@ compare: $(OUTPUT_ROMS)
 $(OBJECTS): build/%.o: source/%.asm
 	rgbasm -i source/ -h -E -o $@ $<
 
-DEPENDENCY_SCAN_EXIT_STATUS := $(shell tools/asmdependencies -s source/ $(OBJECTS:build/%.o=%.asm) > build/dependencies.d; echo $$?)
+DEPENDENCY_SCAN_EXIT_STATUS := $(shell tools/asmdependencies -s source/ $(ASM_FILES:source/%=%) > build/dependencies.d; echo $$?)
 ifneq ($(DEPENDENCY_SCAN_EXIT_STATUS), 0)
 $(error Dependency scan failed)
 endif
