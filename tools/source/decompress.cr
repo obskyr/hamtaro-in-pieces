@@ -37,11 +37,9 @@ def decompress_reference_chunk(from, to, chunk_start)
     num_bytes = 0x100 if num_bytes == 0 
     start_index = from.read_bytes(UInt16, IO::ByteFormat::LittleEndian)
     
-    # This won't work if the reference references bytes it itself writes,
-    # but I'm fairly certain the encoder Pax Softnica used wouldn't do that.
-    reference_io = IO::Memory.new(to.to_slice)
-    reference_io.seek start_index
-
+    # In order to be able to reference bytes the reference itself writes,
+    # this reference IO goes past the memory that's currently filled out.
+    reference_io = IO::Memory.new (to.buffer + start_index).to_slice(num_bytes)
     IO.copy(reference_io, to, num_bytes)
 end
 
