@@ -14,7 +14,7 @@ clean:
 
 $(LARGE_TOOLS):
 	$(MAKE) --no-print-directory -C source/$@
-	mv source/$@/$@ ./
+	mv source/$@/bin/$@ ./
 
 $(SMALL_TOOLS): %: source/%.cr
 	crystal build -o $@ $<

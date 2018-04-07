@@ -1,4 +1,4 @@
-.PHONY: all clean
+.PHONY: all clean tools
 
 BASE_ROM = base.gbc
 OUTPUT_ROMS = Hamtaro\ -\ Ham-Hams\ Unite!\ (U).gbc
@@ -6,10 +6,13 @@ OUTPUT_ROMS = Hamtaro\ -\ Ham-Hams\ Unite!\ (U).gbc
 ASM_FILES := $(shell find source/ -type f -name "*.asm")
 OBJECTS = $(ASM_FILES:source/%.asm=build/%.o)
 
-all: $(OUTPUT_ROMS) compare
+all: tools $(OUTPUT_ROMS) compare
 
 clean:
 	rm -rf build/*
+
+tools:
+	$(MAKE) --no-print-directory -C tools/
 
 $(OUTPUT_ROMS): $(OBJECTS)
 	rgblink -n "$(@:.gbc=.sym)" -O "$(BASE_ROM)" -o "$@" $^
@@ -28,6 +31,9 @@ build/%.2bpp: source/%.png source/%.args
 	tools/dazzlie encode --format gb_2bpp $(shell cat source/$*.args) -i $< -o $@
 
 DEPENDENCY_SCAN_EXIT_STATUS := $(shell tools/asmdependencies -s source/ -b build/ $(ASM_FILES:source/%=%) > build/dependencies.d; echo $$?)
+ifeq ($(DEPENDENCY_SCAN_EXIT_STATUS), 127)
+$(error Dependency scanner not found. Please run "$(MAKE) -C tools")
+endif
 ifneq ($(DEPENDENCY_SCAN_EXIT_STATUS), 0)
 $(error Dependency scan failed)
 endif
