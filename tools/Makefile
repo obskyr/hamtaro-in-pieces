@@ -1,4 +1,4 @@
-.PHONY: all clean separate_tools
+.PHONY: all clean
 
 # Large tools are those that have their own makefiles and directories,
 # while small tools are single .cr files in the source directory.

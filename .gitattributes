@@ -3,3 +3,4 @@ Makefile text
 
 # Crystal still has some issues with \r\n line endings.
 *.cr text eol=lf
+*.sh text eol=lf

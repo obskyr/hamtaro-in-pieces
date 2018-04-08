@@ -2,6 +2,8 @@
 *.gbc
 *.sym
 *.sav
+/*.sn*
+/*.ss*
 
 # Built files.
 build/

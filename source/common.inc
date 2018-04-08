@@ -14,7 +14,7 @@ ENDM
 
 ; \1: Bank of code to jump to
 ; \2: Address of code to jump to
-M_CrossBankJump: mACRO
+M_CrossBankJump: MACRO
     rst A_Interrupt_CrossBankJump
     DW \2
     DB \1

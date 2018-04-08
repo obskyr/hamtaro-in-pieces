@@ -1,4 +1,4 @@
-.PHONY: all clean tools
+.PHONY: all clean tools compare
 
 BASE_ROM = base.gbc
 OUTPUT_ROMS = Hamtaro\ -\ Ham-Hams\ Unite!\ (U).gbc

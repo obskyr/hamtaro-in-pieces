@@ -58,7 +58,7 @@ DisplayGbcOnlyScreen::
     M_DecompressTilemap $14, $5E, $4808, $9800
 
     ; Black, dark gray, light gray, white.
-    ld a, $E4
+    ld a, (3 << 6) | (2 << 4) | (1 << 2) | 0
     ldh [A_Lcdc_GbMapPalette], a
     ld a, M_Lcdc_Enabled | \
           M_Lcdc_WindowUsesSecondTilemap | \

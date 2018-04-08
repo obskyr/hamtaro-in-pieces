@@ -3,7 +3,7 @@
 
 require "option_parser"
 
-def dependencies_in(asm_file_paths, source_dir="", build_dir="")
+def dependencies_in(asm_file_paths, source_dir = "", build_dir = "")
     asm_file_paths = asm_file_paths.clone
     asm_file_paths.map! { |p| File.join(source_dir, p) } if !source_dir.empty?
     build_dir += File::SEPARATOR if !build_dir.empty? && !build_dir.ends_with?(File::SEPARATOR)
@@ -21,7 +21,7 @@ def dependencies_in(asm_file_paths, source_dir="", build_dir="")
     return dependencies
 end
 
-def shallow_dependencies_of(asm_file_path, source_dir="", build_dir="")
+def shallow_dependencies_of(asm_file_path, source_dir = "", build_dir = "")
     asm_dependencies = Set(String).new
     bin_dependencies = Set(String).new
 
@@ -66,8 +66,8 @@ OptionParser.parse! do |parser|
         "-b PATH",
         "Build directory - when includes begin with this, -s won't be prepended."
     ) { |b| build_dir = b }
-    parser.missing_option { |o| STDERR.puts %(Missing argument to "#{o}".); exit 1}
-    parser.invalid_option { |o| STDERR.puts %(Invalid option: "#{o}".); exit 1}
+    parser.missing_option { |o| STDERR.puts %(Missing argument to "#{o}".); exit 1 }
+    parser.invalid_option { |o| STDERR.puts %(Invalid option: "#{o}".); exit 1 }
 end
 
 dependencies_in(ARGV, source_dir, build_dir).each do |file, dependencies|
