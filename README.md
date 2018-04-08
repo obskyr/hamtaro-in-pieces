@@ -17,10 +17,14 @@ $ md5sum base.gbc
 48ce279084e1fc7a9136cc211f4fad5d  base.gbc
 ```
 
-For speed and fun (but mostly speed), the disassembly uses tools written in [Crystal](https://crystal-lang.org/). If you don't already have it, install the Crystal compiler. Follow the [official installation instructions](https://crystal-lang.org/docs/installation/)! At the time of writing, Crystal isn't available natively for Windows, so you'll need to use [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (available on Windows 10) and follow the Linux instructions.
+The following are required to build the disassembly:
 
-Once that setup is done, build the tools, and then build the ROM itself using Make:
+* [Crystal](https://crystal-lang.org/) – for speed and fun (but mostly speed), the disassembly uses tools written in Crystal. Follow [the official installation instructions](https://crystal-lang.org/docs/installation/)!
+  
+  At the time of writing, Crystal isn't available natively for Windows, so you'll need to use [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (available on Windows 10) and follow the Linux instructions.
+* [RGBDS](https://github.com/rednex/rgbds) version 0.3.6 or newer – follow the instructions in the readme on the GitHub page to install.
 
+Once preparation is done, use Make to first build the tools, and then build the ROM itself:
 
 ```bash
 make -C tools
@@ -31,4 +35,4 @@ Presto! The finished ROM is now available as `Hamtaro - Ham-Hams Unite! (U).gbc`
 
 # That's it!
 
-Questions? Wishes? Just wanna talk? [Open an issue](https://github.com/obskyr/hamtaro-in-pieces/issues) here on GitHub or write to [@obskyr on Twitter](https://twitter.com/obskyr)!
+Questions? Wishes? Problems? Just wanna talk? [Open an issue](https://github.com/obskyr/hamtaro-in-pieces/issues) here on GitHub or write to [@obskyr on Twitter](https://twitter.com/obskyr)!
