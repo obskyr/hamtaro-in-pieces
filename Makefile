@@ -22,9 +22,10 @@ compare: $(OUTPUT_ROMS)
 	cmp "$(BASE_ROM)" "$<"
 
 # rgbasm -h doesn't put in automatic nops after halts.
+# -L makes sure `ld`s don't get turned into `ldh`s.
 $(OBJECTS): build/%.o: source/%.asm
 	@mkdir -p $(@D)
-	rgbasm -i source/ -h -E -o $@ $<
+	rgbasm -i source/ -h -L -E -o $@ $<
 
 build/%.2bpp: source/%.png source/%.args
 	@mkdir -p $(@D)

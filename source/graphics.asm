@@ -16,7 +16,7 @@ SetPalettes::
     push af
 
     ld a, $01
-    ld [A_WramBankControl], a
+    ldh [A_WramBankControl], a
     ld hl, A_BgPaletteData
 
     ld a, M_Palette_AutoIncrement | $00

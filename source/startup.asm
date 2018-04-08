@@ -53,7 +53,7 @@ Start::
 
     ld a, $02
     ldh [$FFFE], a
-  
+
 .skipChangingReturnAddress
     xor a
     ld b, $7E
@@ -90,7 +90,7 @@ Start::
     ldh [A_InterruptFlags], a
 
     ld a, M_Buttons_NoneSelected
-    ld [A_Buttons], a
+    ldh [A_Buttons], a
 
     stop ; The requested CPU speed is activated using a stop.
 
