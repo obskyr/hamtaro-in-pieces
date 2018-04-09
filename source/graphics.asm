@@ -2,13 +2,13 @@ INCLUDE "system.inc"
 
 SECTION "Active palette data", WRAMX[$DD9A], BANK[$01]
 A_BgPaletteData::
-    REPT 32
+REPT 32
     DW
-    ENDR
+ENDR
 A_SpritePaletteData::
-    REPT 32
+REPT 32
     DW
-    ENDR
+ENDR
 
 SECTION "Function to set palettes from WRAM", ROM0[$078F]
 SetPalettes::
