@@ -51,7 +51,7 @@ DisplayGbcOnlyScreen::
           M_Lcdc_WindowUsesSecondTilemap | \
           M_Lcdc_TallSprites | \
           M_Lcdc_BgOn
-    ld [A_CurDisplay_LcdcControl], a
+    ld [W_Display_LcdcControl], a
     ldh [A_Lcdc_Control], a
 
 .doNothingForever

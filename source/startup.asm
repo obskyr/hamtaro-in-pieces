@@ -112,7 +112,7 @@ Start::
 
     ld a, $01
     ldh [A_WramBankControl], a
-    ld hl, A_BgPaletteData + 64 + 64 - 1
+    ld hl, W_BgPaletteData + 64 + 64 - 1
     
     ld c, 64 + 64
     ld a, $FF
@@ -192,7 +192,7 @@ Start::
     ld a, $00
     ldh [A_WramBankControl], a
     ld a, BANK(JumpToInitSoundStructures)
-    ld [A_CurrentRomBank], a
+    ld [W_CurrentRomBank], a
     ld [A_Mbc5_RomBankControl], a
 
     call JumpToInitSoundStructures

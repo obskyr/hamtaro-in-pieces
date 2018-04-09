@@ -23,20 +23,20 @@ ENDM
 M_ResetMapPositions: MACRO
     ; Interesting that they used `ld a, 0` here and not `xor a`.
     ld a, 0
-    ld [A_CurDisplay_LcdcControl], a
+    ld [W_Display_LcdcControl], a
 
     ; Reset the background scroll to 0, 0.
     ld a, 0
-    ld [A_CurDisplay_YScroll], a
+    ld [W_Display_YScroll], a
     ldh [A_Lcdc_YScroll], a
-    ld [A_CurDisplay_XScroll], a
+    ld [W_Display_XScroll], a
     ldh [A_Lcdc_XScroll], a
 
     ; Shift the window horizontally completely off the screen.
-    ld [A_CurDisplay_WindowYPos], a
+    ld [W_Display_WindowYPos], a
     ldh [A_Lcdc_WindowYPos], a
     ld a, 167
-    ld [A_CurDisplay_WindowXPos], a
+    ld [W_Display_WindowXPos], a
     ldh [A_Lcdc_WindowXPos], a
 ENDM
 

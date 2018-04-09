@@ -5,7 +5,7 @@ SwitchBank::
     push af
     di
 
-    ld [A_CurrentRomBank], a
+    ld [W_CurrentRomBank], a
     ld [A_Mbc5_RomBankControl], a
     xor a
     ld [A_Mbc5_RamBankControl_HighBit], a
@@ -38,7 +38,7 @@ CrossBankJump::
 CrossBankCall::
     pop hl
 
-    ld a, [A_CurrentRomBank]
+    ld a, [W_CurrentRomBank]
     ld e, a
     ld a, 0
     ld d, a
