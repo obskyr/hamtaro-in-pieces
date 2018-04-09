@@ -189,4 +189,93 @@ Start::
     M_Mbc5_DisableExternalRam
 
 .saveSignatureIsValid
+    ld a, $00
+    ldh [A_WramBankControl], a
+    ld a, BANK(JumpToInitSoundStructures)
+    ld [A_CurrentRomBank], a
+    ld [A_Mbc5_RomBankControl], a
+
+    call JumpToInitSoundStructures
+
     ; ...
+
+SECTION "Stepping stone to initializing sound-related WRAM", ROMX[$4000], BANK[$07]
+JumpToInitSoundStructures::
+    jp InitSoundStructures
+
+SECTION "Function for initializing sound-related WRAM", ROMX[$5F82], BANK[$07]
+; This seems to fill out a lot of sound-related WRAM values.
+; Miiiight be other WRAM too, but there's no telling yet.
+; All of this needs to be filled in later as we see how it's used.
+InitSoundStructures:: ; Tentative name.
+    xor a
+    ld [A_Sound_On], a
+    ld a, M_Sound_On
+    ld [A_Sound_On], a
+    
+    ld a, M_Sound_BothFullVolume
+    ld [A_Sound_OutputControl], a
+    ; I suppose these are WRAM structures with
+    ; info about current sound settings. 
+    ld [$CF14], a
+    ld [$CF1B], a
+
+    ld a, M_Sound_AllChannelsToBoth
+    ld [A_Sound_ChannelOutputs], a
+
+    ; Ah, yes. The classic "turn on sound and then immediately
+    ; turn off all sound" move. These have got to be macros.
+    xor a
+    ld [A_Sound_ChannelOutputs], a
+    ld [$CF15], a
+    ld [$CF1C], a
+    ld [A_Sound_Ch3_On], a
+    ld [A_Sound_Ch3_Volume], a
+
+    xor a
+    ld [$CEE9], a
+    ld [$CF04], a
+
+    ld a, $20
+    ld [$CFFD], a
+    ld a, $80
+    ld [$CFFC], a
+
+    xor a
+    ld [$CF05], a
+    ld [$CF06], a
+
+    ld hl, $43DD
+    ld a, l
+    ld [$CF12], a
+    ld a, h
+    ld [$CF13], a
+    ld a, $80
+    ld [$CE4B], a
+    ld a, $FF
+    ld [$CF1C], a
+
+    xor a
+
+Addr = $CEDC
+REPT 12
+    ld [Addr], a
+Addr = Addr + 1
+ENDR
+
+Addr = $CF0A
+REPT 8
+    ld [Addr], a
+Addr = Addr + 1
+ENDR
+
+    ld [$CFFA], a
+    ld [$CF20], a
+
+    xor a
+    ld [$CF00], a
+    
+    ld a, $66
+    ld [$CFFF], a
+    
+    ret
