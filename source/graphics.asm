@@ -1,5 +1,12 @@
 INCLUDE "system.inc"
 
+SECTION "Info on the current display settings", WRAM0[$C672]
+A_CurDisplay_LcdcControl:: DB
+A_CurDisplay_YScroll::     DB
+A_CurDisplay_XScroll::     DB
+A_CurDisplay_WindowYPos::  DB
+A_CurDisplay_WindowXPos::  DB
+
 SECTION "Active palette data", WRAMX[$DD9A], BANK[$01]
 A_BgPaletteData::
 REPT 32

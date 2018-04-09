@@ -197,6 +197,8 @@ Start::
 
     call JumpToInitSoundStructures
 
+    M_ResetMapPositions
+
     ; ...
 
 SECTION "Stepping stone to initializing sound-related WRAM", ROMX[$4000], BANK[$07]

@@ -1,4 +1,5 @@
 INCLUDE "system.inc"
+INCLUDE "common.inc"
 INCLUDE "compression.inc"
 
 SECTION "GBC-only screen", ROM0[$04DD]
@@ -37,21 +38,7 @@ DisplayGbcOnlyScreen::
     ld a, l
     jr nz, .clearWramBankLoop
 
-    ; Very odd to set a bunch of already cleared memory addresses to 0 here...
-    ; Might be a macro or two to set the position of the maps.
-    ld a, 0
-    ld [$C672], a
-    ld a, 0
-    ld [$C673], a
-    ldh [A_Lcdc_YScroll], a
-    ld [$C674], a
-    ldh [A_Lcdc_XScroll], a
-    ld [$C675], a
-    ldh [A_Lcdc_WindowYPos], a
-    ; Shift the window completely off the screen, I suppose.
-    ld a, 167
-    ld [$C676], a
-    ldh [A_Lcdc_WindowXPos], a
+    M_ResetMapPositions
 
     M_Decompress $5E, $4000, $8D00
     M_Decompress $5E, $41DE, $9000
@@ -64,7 +51,7 @@ DisplayGbcOnlyScreen::
           M_Lcdc_WindowUsesSecondTilemap | \
           M_Lcdc_TallSprites | \
           M_Lcdc_BgOn
-    ld [$C672], a
+    ld [A_CurDisplay_LcdcControl], a
     ldh [A_Lcdc_Control], a
 
 .doNothingForever
